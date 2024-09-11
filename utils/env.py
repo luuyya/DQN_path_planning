@@ -1,36 +1,54 @@
 import numpy as np
 
+class Map:
+    def __init__(self, size=8, obstacle_ratio=0.1, seed=None):
+        """
+        初始化 Map 类
+        :param size: 地图大小（默认 8x8）
+        :param obstacle_ratio: 障碍物占比（默认为 10%）
+        :param seed: 随机种子（可选）
+        """
+        self.size = size
+        self.obstacle_ratio = obstacle_ratio
+        self.seed = seed
+        self.grid = None
 
-class map:
-    def create_random_map(size=100):
+    def create_random_map(self):
+        """
+        创建一个随机地图，并在地图上随机放置障碍物
+        :return: 生成的地图
+        """
+        if self.seed is not None:
+            np.random.seed(self.seed)
 
-        map = np.zeros((size, size))
+        self.grid = np.zeros((self.size, self.size))
 
-        obstacle_num = int(size * size * 0.1)
-        np.random.seed(34)
-        obstacle_coords = np.random.randint(0, size, size=(obstacle_num, 2))
+        obstacle_num = int(self.size * self.size * self.obstacle_ratio)
+
+        obstacle_coords = np.random.randint(0, self.size, size=(obstacle_num, 2))
 
         for coord in obstacle_coords:
-            map[coord[0], coord[1]] = 1  # 用1表示障碍物
+            self.grid[coord[0], coord[1]] = 1
 
-        # plt.figure(figsize=(10, 10))
-        # plt.imshow(map, cmap="gray", origin="upper")
-        # plt.show()
+        return self.grid
 
-        print(type(map))
+    def initialize_start_end(self):
+        """
+        初始化起点和终点，确保它们不在障碍物上
+        :return: 起点和终点的坐标
+        """
+        if self.grid is None:
+            raise ValueError("请先创建地图。")
 
-        return map
+        if self.seed is not None:
+            np.random.seed(self.seed)
 
-    def initialize(map):
-        size,_=np.shape(map)
-        np.random.seed(34)
-        tmp=np.random.randint(low=0,high=size,size=(2,2))
-        start=tmp[0]
-        end=tmp[1]
+        start, end = None, None
+        while True:
+            tmp = np.random.randint(low=0, high=self.size, size=(2, 2))
+            start, end = tmp[0], tmp[1]
+            
+            if self.grid[start[0], start[1]] == 0 and self.grid[end[0], end[1]] == 0:
+                break
 
-        while map[start[0],start[1]]==0 and map[end[0],end[1]]==0:
-            tmp = np.random.randint((2, 2))
-            start = tmp[0]
-            end = tmp[1]
-
-        return start,end
+        return start, end
