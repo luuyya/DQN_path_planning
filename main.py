@@ -22,4 +22,3 @@ map = env.map.create_random_map(10)
 start,end = env.map.initialize(map)
 print(start,end)
 plot_map(map, start, end)
-
