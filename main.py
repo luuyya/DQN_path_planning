@@ -1,24 +1,14 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
+from utils.env import Map
+from utils.plot import plot_map
 
-import utils.env as env
+def main():
+    map_env = Map(8, 0.1, 34)
 
+    grid = map_env.create_random_map()
 
-def plot_map(map, start, end):
-    colored_map = np.copy(map)
+    start, end = map_env.initialize_start_end()
 
-    fig, ax = plt.subplots()
+    plot_map(grid, start, end)
 
-    colored_map[start[0], start[1]] = 2
-    colored_map[end[0], end[1]] = 3
-
-    new_cmap = mcolors.ListedColormap(['white', 'black', 'green', 'red'])
-
-    ax.imshow(colored_map, cmap=new_cmap)
-    plt.show()
-
-map = env.map.create_random_map(10)
-start,end = env.map.initialize(map)
-print(start,end)
-plot_map(map, start, end)
+if __name__ == "__main__":
+    main()
