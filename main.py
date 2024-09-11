@@ -5,23 +5,23 @@ import numpy as np
 
 from model import DQN, Dueling_DQN
 from learn import dqn_learning, OptimizerSpec
-from env import Map  # 你的 Map 类在 env.py 中
+from utils.env import Map
 
-# Global Variables
 BATCH_SIZE = 32
 REPLAY_BUFFER_SIZE = 1000000
-FRAME_HISTORY_LEN = 4
+FRAME_HISTORY_LEN = 4 #?
 TARGET_UPDATE_FREQ = 10000
 GAMMA = 0.99
-LEARNING_FREQ = 4
+LEARNING_FREQ = 4 #?
 LEARNING_RATE = 0.00025
-ALPHA = 0.95
+ALPHA = 0.95 #?
 EPS = 0.01
 EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
 LEARNING_STARTS = 50000
 
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
     def stopping_criterion(env, t):
+        """todo"""
         return env.get_total_steps() >= num_timesteps
 
     optimizer = OptimizerSpec(
@@ -68,10 +68,13 @@ def main():
     parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN')
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand")
 
+
+    #各种参数设置
     train_parser = subparsers.add_parser("train", help="Train an RL agent for grid map path planning")
     train_parser.add_argument("--map-size", type=int, required=True, help="Size of the grid map")
     train_parser.add_argument("--obstacle-ratio", type=float, required=True, help="Ratio of obstacles in the grid map")
     train_parser.add_argument("--seed", type=int, required=True, help="Random seed for environment")
+    #训练时间步长
     train_parser.add_argument("--num-timesteps", type=int, required=True, help="Number of timesteps to run the training")
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
     train_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
@@ -91,10 +94,8 @@ def main():
     start, end = map_instance.initialize_start_end()
     print(f"Start: {start}, End: {end}")
 
-    # Set up the environment
     env = map_instance  # 使用 map_instance 作为环境对象
 
-    # Set training parameters
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)
     

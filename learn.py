@@ -8,7 +8,7 @@ from utils.replay_buffer import ReplayBuffer
 from utils.schedules import LinearSchedule
 from logger import Logger
 import time
-from utils.env import Map  # 你的 Map 类
+from utils.env import Map
 import os
 
 OptimizerSpec = namedtuple("OptimizerSpec", ["constructor", "kwargs"])
