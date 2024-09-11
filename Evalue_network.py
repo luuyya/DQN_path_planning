@@ -44,5 +44,3 @@ print(model)
 dummy_input = torch.randn(1, 32, 20, 20)  # batch_size=1，输入大小为20x20，通道数32
 output = model(dummy_input)
 print(output)
-
-# dsafaa
