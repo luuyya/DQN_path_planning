@@ -4,8 +4,9 @@ import torch.optim as optim
 import numpy as np
 
 from model import DQN, Dueling_DQN
-from learn import dqn_learning, OptimizerSpec
+# from learn import dqn_learning, OptimizerSpec
 from utils.env import Map
+from utils.schedules import *
 
 BATCH_SIZE = 32
 REPLAY_BUFFER_SIZE = 1000000
@@ -19,50 +20,50 @@ EPS = 0.01
 EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
 LEARNING_STARTS = 50000
 
-def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
-    def stopping_criterion(env, t):
-        """todo"""
-        return env.get_total_steps() >= num_timesteps
+# def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
+#     def stopping_criterion(env, t):
+#         """todo"""
+#         return env.get_total_steps() >= num_timesteps
 
-    optimizer = OptimizerSpec(
-        constructor=optim.RMSprop,
-        kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS)
-    )
+#     optimizer = OptimizerSpec(
+#         constructor=optim.RMSprop,
+#         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS)
+#     )
 
-    if dueling_dqn:
-        dqn_learning(
-            env=env,
-            q_func=Dueling_DQN,
-            optimizer_spec=optimizer,
-            exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=stopping_criterion,
-            replay_buffer_size=REPLAY_BUFFER_SIZE,
-            batch_size=BATCH_SIZE,
-            gamma=GAMMA,
-            learning_starts=LEARNING_STARTS,
-            learning_freq=LEARNING_FREQ,
-            frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn,
-            dueling_dqn=dueling_dqn
-        )
-    else:
-        dqn_learning(
-            env=env,
-            q_func=DQN,
-            optimizer_spec=optimizer,
-            exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=stopping_criterion,
-            replay_buffer_size=REPLAY_BUFFER_SIZE,
-            batch_size=BATCH_SIZE,
-            gamma=GAMMA,
-            learning_starts=LEARNING_STARTS,
-            learning_freq=LEARNING_FREQ,
-            frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn,
-            dueling_dqn=dueling_dqn
-        )
+#     if dueling_dqn:
+#         dqn_learning(
+#             env=env,
+#             q_func=Dueling_DQN,
+#             optimizer_spec=optimizer,
+#             exploration=EXPLORATION_SCHEDULE,
+#             stopping_criterion=stopping_criterion,
+#             replay_buffer_size=REPLAY_BUFFER_SIZE,
+#             batch_size=BATCH_SIZE,
+#             gamma=GAMMA,
+#             learning_starts=LEARNING_STARTS,
+#             learning_freq=LEARNING_FREQ,
+#             frame_history_len=FRAME_HISTORY_LEN,
+#             target_update_freq=TARGET_UPDATE_FREQ,
+#             double_dqn=double_dqn,
+#             dueling_dqn=dueling_dqn
+#         )
+#     else:
+#         dqn_learning(
+#             env=env,
+#             q_func=DQN,
+#             optimizer_spec=optimizer,
+#             exploration=EXPLORATION_SCHEDULE,
+#             stopping_criterion=stopping_criterion,
+#             replay_buffer_size=REPLAY_BUFFER_SIZE,
+#             batch_size=BATCH_SIZE,
+#             gamma=GAMMA,
+#             learning_starts=LEARNING_STARTS,
+#             learning_freq=LEARNING_FREQ,
+#             frame_history_len=FRAME_HISTORY_LEN,
+#             target_update_freq=TARGET_UPDATE_FREQ,
+#             double_dqn=double_dqn,
+#             dueling_dqn=dueling_dqn
+#         )
 
 def main():
     parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN')
@@ -95,13 +96,15 @@ def main():
     print(f"Start: {start}, End: {end}")
 
     env = map_instance  # 使用 map_instance 作为环境对象
+    from utils import plot
+    plot.plot_map(env, start, end)
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)
     
     # Run training
     print(f"Training with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-    grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+    # grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
 
 if __name__ == '__main__':
     main()
