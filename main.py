@@ -7,6 +7,7 @@ from model import DQN, Dueling_DQN
 # from learn import dqn_learning, OptimizerSpec
 from utils.env import Map
 from utils.schedules import *
+from utils import plot
 
 BATCH_SIZE = 32
 REPLAY_BUFFER_SIZE = 1000000
@@ -74,7 +75,7 @@ def main():
     train_parser = subparsers.add_parser("train", help="Train an RL agent for grid map path planning")
     train_parser.add_argument("--map-size", type=int, required=True, help="Size of the grid map")
     train_parser.add_argument("--obstacle-ratio", type=float, required=True, help="Ratio of obstacles in the grid map")
-    train_parser.add_argument("--seed", type=int, required=True, help="Random seed for environment")
+    train_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
     train_parser.add_argument("--num-timesteps", type=int, required=True, help="Number of timesteps to run the training")
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
@@ -96,8 +97,8 @@ def main():
     print(f"Start: {start}, End: {end}")
 
     env = map_instance  # 使用 map_instance 作为环境对象
-    from utils import plot
-    plot.plot_map(env, start, end)
+    grid = env.get_grid()  # 获取网格数据
+    plot.plot_map(grid, start, end)  # 将网格数据传递给绘图函数      
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)

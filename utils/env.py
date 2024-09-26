@@ -27,10 +27,10 @@ class Map:
 
         obstacle_coords = np.random.randint(0, self.size, size=(obstacle_num, 2))
 
+        print(obstacle_coords)
+
         for coord in obstacle_coords:
             self.grid[coord[0], coord[1]] = 1
-
-        return self.grid
 
     def initialize_start_end(self):
         """
@@ -44,11 +44,19 @@ class Map:
             np.random.seed(self.seed)
 
         start, end = None, None
-        while True:
-            tmp = np.random.randint(low=0, high=self.size, size=(2, 2))
-            start, end = tmp[0], tmp[1]
-            
-            if self.grid[start[0], start[1]] == 0 and self.grid[end[0], end[1]] == 0:
-                break
+        available_coords = np.argwhere(self.grid == 0)  # 获取所有可用坐标
+
+        if len(available_coords) < 2:
+            raise ValueError("可用的起点和终点坐标不足。")
+
+        start_index = np.random.choice(len(available_coords))
+        start = available_coords[start_index]
+
+        available_coords = np.delete(available_coords, start_index, axis=0)  # 删除已选择的起点
+        end_index = np.random.choice(len(available_coords))
+        end = available_coords[end_index]
 
         return start, end
+    
+    def get_grid(self):
+        return self.grid
