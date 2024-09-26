@@ -11,60 +11,63 @@ from utils import plot
 
 BATCH_SIZE = 32
 REPLAY_BUFFER_SIZE = 1000000
-FRAME_HISTORY_LEN = 4 #?
+FRAME_HISTORY_LEN = 4 #每个状态输入包含最近的四帧信息
 TARGET_UPDATE_FREQ = 10000
-GAMMA = 0.99
-LEARNING_FREQ = 4 #?
+GAMMA = 0.99 # 未来奖励折扣因子
+LEARNING_FREQ = 4 #四个环境交互步骤（例如，每执行四次动作），模型才会更新一次
 LEARNING_RATE = 0.00025
-ALPHA = 0.95 #?
+ALPHA = 0.95 #计算优先经验重放的参数，控制经验重放的优先级
 EPS = 0.01
 EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
-LEARNING_STARTS = 50000
+# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。
+# 0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
+LEARNING_STARTS = 50000 #开始训练前所需的初始经验数量
 
-# def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
-#     def stopping_criterion(env, t):
-#         """todo"""
-#         return env.get_total_steps() >= num_timesteps
+def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
+    def stopping_criterion(env, t):
+        """todo"""
+        return env.get_total_steps() >= num_timesteps
+        # 总的步骤数是否大于或等于 num_timesteps 停止训练
 
-#     optimizer = OptimizerSpec(
-#         constructor=optim.RMSprop,
-#         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS)
-#     )
+    optimizer = OptimizerSpec(
+        constructor=optim.RMSprop, # RMSprop 作为优化算法
+        kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS) # 传递给优化器的关键字参数
+    )
 
-#     if dueling_dqn:
-#         dqn_learning(
-#             env=env,
-#             q_func=Dueling_DQN,
-#             optimizer_spec=optimizer,
-#             exploration=EXPLORATION_SCHEDULE,
-#             stopping_criterion=stopping_criterion,
-#             replay_buffer_size=REPLAY_BUFFER_SIZE,
-#             batch_size=BATCH_SIZE,
-#             gamma=GAMMA,
-#             learning_starts=LEARNING_STARTS,
-#             learning_freq=LEARNING_FREQ,
-#             frame_history_len=FRAME_HISTORY_LEN,
-#             target_update_freq=TARGET_UPDATE_FREQ,
-#             double_dqn=double_dqn,
-#             dueling_dqn=dueling_dqn
-#         )
-#     else:
-#         dqn_learning(
-#             env=env,
-#             q_func=DQN,
-#             optimizer_spec=optimizer,
-#             exploration=EXPLORATION_SCHEDULE,
-#             stopping_criterion=stopping_criterion,
-#             replay_buffer_size=REPLAY_BUFFER_SIZE,
-#             batch_size=BATCH_SIZE,
-#             gamma=GAMMA,
-#             learning_starts=LEARNING_STARTS,
-#             learning_freq=LEARNING_FREQ,
-#             frame_history_len=FRAME_HISTORY_LEN,
-#             target_update_freq=TARGET_UPDATE_FREQ,
-#             double_dqn=double_dqn,
-#             dueling_dqn=dueling_dqn
-#         )
+    if dueling_dqn:
+        dqn_learning(
+            env=env,
+            q_func=Dueling_DQN,
+            optimizer_spec=optimizer,
+            exploration=EXPLORATION_SCHEDULE,
+            stopping_criterion=stopping_criterion,
+            replay_buffer_size=REPLAY_BUFFER_SIZE,
+            batch_size=BATCH_SIZE,
+            gamma=GAMMA,
+            learning_starts=LEARNING_STARTS,
+            learning_freq=LEARNING_FREQ,
+            frame_history_len=FRAME_HISTORY_LEN,
+            target_update_freq=TARGET_UPDATE_FREQ,
+            double_dqn=double_dqn,
+            dueling_dqn=dueling_dqn
+        )
+    else:
+        dqn_learning(
+            env=env,
+            q_func=DQN,
+            optimizer_spec=optimizer,
+            exploration=EXPLORATION_SCHEDULE,
+            stopping_criterion=stopping_criterion,
+            replay_buffer_size=REPLAY_BUFFER_SIZE,
+            batch_size=BATCH_SIZE,
+            gamma=GAMMA,
+            learning_starts=LEARNING_STARTS,
+            learning_freq=LEARNING_FREQ,
+            frame_history_len=FRAME_HISTORY_LEN,
+            target_update_freq=TARGET_UPDATE_FREQ,
+            double_dqn=double_dqn,
+            dueling_dqn=dueling_dqn
+        )
 
 def main():
     parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN')
