@@ -25,7 +25,6 @@ LEARNING_STARTS = 50000 #开始训练前所需的初始经验数量
 
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
     def stopping_criterion(env, t):
-        """todo"""
         return env.get_total_steps() >= num_timesteps
         # 总的步骤数是否大于或等于 num_timesteps 停止训练
 
@@ -76,11 +75,11 @@ def main():
 
     #各种参数设置
     train_parser = subparsers.add_parser("train", help="Train an RL agent for grid map path planning")
-    train_parser.add_argument("--map-size", type=int, required=True, help="Size of the grid map")
-    train_parser.add_argument("--obstacle-ratio", type=float, required=True, help="Ratio of obstacles in the grid map")
+    train_parser.add_argument("--map-size", type=int, default=8, help="Size of the grid map")
+    train_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
     train_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
-    train_parser.add_argument("--num-timesteps", type=int, required=True, help="Number of timesteps to run the training")
+    train_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
     train_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
     train_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
