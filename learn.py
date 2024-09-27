@@ -6,7 +6,7 @@ import itertools
 from collections import namedtuple
 from utils.replay_buffer import ReplayBuffer
 from utils.schedules import LinearSchedule
-from logger import Logger
+# from logger import Logger
 import time
 from utils.env import Map
 import os
@@ -19,7 +19,7 @@ dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTens
 dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
 
 # 设置 Logger
-logger = Logger('./logs')
+# logger = Logger('./logs')
 def to_np(x):
     return x.data.cpu().numpy()
 
@@ -37,7 +37,7 @@ def dqn_learning(env,
           target_update_freq=10000):
 
     #todo: 可以修改决策数
-    in_channels = 4
+    in_channels = 4 # 输入通道数
     num_actions = 4
     
     # 定义网络
@@ -48,7 +48,7 @@ def dqn_learning(env,
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
 
     # 初始化回放缓冲区
-    replay_buffer = ReplayBuffer(replay_buffer_size, frame_history_len)
+    replay_buffer = ReplayBuffer(replay_buffer_size)
 
     num_param_updates = 0
     mean_episode_reward = -float('nan')
@@ -59,7 +59,7 @@ def dqn_learning(env,
 
     for t in itertools.count():
         # todo:停止迭代条件
-        if env.get_total_depth()>stopping_num:
+        if env.get_total_step()>stopping_num:
             break
 
         ### 2. Step the env and store the transition
@@ -81,12 +81,8 @@ def dqn_learning(env,
                 action = ((q_value_all_actions).data.max(1)[1])[0]
             else:
                 action = torch.IntTensor([[np.random.randint(num_actions)]])[0][0]
-
-        #todo:step
+        # todo:step
         obs, reward, done, info = env.step(action)
-
-        # clipping the reward, noted in nature paper
-        reward = np.clip(reward, -1.0, 1.0)
 
         # store effect of action
         replay_buffer.store_effect(last_stored_frame_idx, action, reward, done)
@@ -98,8 +94,6 @@ def dqn_learning(env,
         # update last_obs
         last_obs = obs
 
-        ### 3. Perform experience replay and train the network.
-        # if the replay buffer contains enough samples...
         if (t > learning_starts and
                 t % learning_freq == 0 and
                 replay_buffer.can_sample(batch_size)):
