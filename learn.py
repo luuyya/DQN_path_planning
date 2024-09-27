@@ -6,7 +6,7 @@ import itertools
 from collections import namedtuple
 from utils.replay_buffer import ReplayBuffer
 from utils.schedules import LinearSchedule
-# from logger import Logger
+from logger import Logger
 import time
 from utils.env import Map
 import os
