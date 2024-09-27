@@ -27,18 +27,16 @@ def dqn_learning(env,
           q_func,
           optimizer_spec,
           exploration=LinearSchedule(1000000, 0.1),
-          stopping_criterion=None,
+          stopping_num=100000,
           replay_buffer_size=1000000,
           batch_size=32,
           gamma=0.99,
           learning_starts=50000,
           learning_freq=4,
           frame_history_len=4,
-          target_update_freq=10000,
-          double_dqn=False,
-          dueling_dqn=False):
+          target_update_freq=10000):
 
-
+    #todo: 可以修改决策数
     in_channels = 4
     num_actions = 4
     
@@ -49,42 +47,42 @@ def dqn_learning(env,
     # 初始化优化器
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
 
-    # todo：初始化回放缓冲区
+    # 初始化回放缓冲区
     replay_buffer = ReplayBuffer(replay_buffer_size, frame_history_len)
 
     num_param_updates = 0
-    mean_episode_reward      = -float('nan')
+    mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
-    last_obs = env.reset()
+    last_obs = env.reset() #?
     LOG_EVERY_N_STEPS = 1000
     SAVE_MODEL_EVERY_N_STEPS = 100000
 
     for t in itertools.count():
-        ### 1. Check stopping criterion
-        if stopping_criterion is not None and stopping_criterion(env, t):
+        # todo:停止迭代条件
+        if env.get_total_depth()>stopping_num:
             break
 
         ### 2. Step the env and store the transition
-        # store last frame, returned idx used later
         last_stored_frame_idx = replay_buffer.store_frame(last_obs)
 
         # get observations to input to Q network (need to append prev frames)
         observations = replay_buffer.encode_recent_observation()
 
-        # before learning starts, choose actions randomly
+        # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
             action = np.random.randint(num_actions)
         else:
-            # epsilon greedy exploration
+            # 贪心的探索
             sample = random.random()
             threshold = exploration.value(t)
             if sample > threshold:
-                obs = torch.from_numpy(observations).unsqueeze(0).type(dtype) / 255.0
-                q_value_all_actions = Q(Variable(obs, volatile=True)).cpu()
+                obs = torch.from_numpy(observations).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
+                q_value_all_actions = Q(Variable(obs, volatile=True)).cpu() # 调用模型
                 action = ((q_value_all_actions).data.max(1)[1])[0]
             else:
                 action = torch.IntTensor([[np.random.randint(num_actions)]])[0][0]
 
+        #todo:step
         obs, reward, done, info = env.step(action)
 
         # clipping the reward, noted in nature paper
