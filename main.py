@@ -24,11 +24,8 @@ EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
 LEARNING_STARTS = 50000 #开始训练前所需的初始经验数量
 
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
-    def stopping_criterion(env, t):
-        """todo"""
-        return env.get_total_steps() >= num_timesteps
-        # 总的步骤数是否大于或等于 num_timesteps 停止训练
 
+    #todo:
     optimizer = OptimizerSpec(
         constructor=optim.RMSprop, # RMSprop 作为优化算法
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS) # 传递给优化器的关键字参数
@@ -40,16 +37,14 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=Dueling_DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=stopping_criterion,
+            stopping_criterion=num_timesteps,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
             frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn,
-            dueling_dqn=dueling_dqn
+            target_update_freq=TARGET_UPDATE_FREQ
         )
     else:
         dqn_learning(
@@ -57,16 +52,14 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=stopping_criterion,
+            stopping_criterion=num_timesteps,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
             frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn,
-            dueling_dqn=dueling_dqn
+            target_update_freq=TARGET_UPDATE_FREQ
         )
 
 def main():
@@ -108,7 +101,7 @@ def main():
     
     # Run training
     print(f"Training with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-    # grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+    grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
 
 if __name__ == '__main__':
     main()

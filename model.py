@@ -14,6 +14,8 @@ class DQN(nn.Module):
 
         self.relu = nn.ReLU()
 
+        self.name="DQN"
+
     def forward(self, x):
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
@@ -40,6 +42,8 @@ class Dueling_DQN(nn.Module):
         self.fc2_val = nn.Linear(in_features=512, out_features=1)
 
         self.relu = nn.ReLU()
+
+        self.name="Dueling_DQN"
 
     def forward(self, x):
         batch_size = x.size(0)
