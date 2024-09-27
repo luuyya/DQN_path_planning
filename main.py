@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 
 from model import DQN, Dueling_DQN
-# from learn import dqn_learning, OptimizerSpec
+from learn import dqn_learning, OptimizerSpec
 from utils.env import Map
 from utils.schedules import *
 from utils import plot
