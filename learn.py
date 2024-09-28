@@ -34,7 +34,7 @@ def dqn_learning(env,
           learning_starts=50000,
           learning_freq=10,
           # frame_history_len=4,
-          target_update_freq=10000,
+          target_update_freq=100,
           double_dqn=False
         ):
 
