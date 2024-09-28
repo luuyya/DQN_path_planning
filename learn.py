@@ -138,7 +138,7 @@ def dqn_learning(env,
             optimizer.step()
             num_param_updates += 1
 
-            # update target Q network weights with current Q network weights
+            # 更新参数
             if num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
 
