@@ -34,7 +34,9 @@ def dqn_learning(env,
           learning_starts=50000,
           learning_freq=10,
           # frame_history_len=4,
-          target_update_freq=10000):
+          target_update_freq=10000,
+          double_dqn=False
+        ):
 
     #todo: 可以修改决策数
     in_channels = 1 # 输入通道数
@@ -99,42 +101,31 @@ def dqn_learning(env,
 
             # input batches to networks
             # get the Q values for current observations (Q(s,a, theta_i))
-            q_values = Q(obs_batch)
+            q_values = Q(obs_batch).cpu()
             q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
             q_s_a = q_s_a.squeeze()
 
-            if (Q.name=="DQN"):
-
-                q_tp1_values = Q(obs_tp1).detach()
+            if (double_dqn):
+                # Double dqn
+                q_tp1_values = Q(next_obs_batch).detach()
                 _, a_prime = q_tp1_values.max(1)
 
-                # get Q values from frozen network for next state and chosen action
-                # Q(s',argmax(Q(s',a', theta_i), theta_i_frozen)) (argmax wrt a')
-                q_target_tp1_values = Q_target(obs_tp1).detach()
+                q_target_tp1_values = Q_target(next_obs_batch).detach()
                 q_target_s_a_prime = q_target_tp1_values.gather(1, a_prime.unsqueeze(1))
                 q_target_s_a_prime = q_target_s_a_prime.squeeze()
 
                 # if current state is end of episode, then there is no next Q value
                 q_target_s_a_prime = (1 - done_mask) * q_target_s_a_prime 
 
-                error = rew_t + gamma * q_target_s_a_prime - q_s_a
+                error = rew_batch + gamma * q_target_s_a_prime - q_s_a
             else:
-                # ---------------
-                #   regular DQN
-                # ---------------
-
-                # get the Q values for best actions in obs_tp1 
-                # based off frozen Q network
-                # max(Q(s', a', theta_i_frozen)) wrt a'
-                q_tp1_values = Q_target(obs_tp1).detach()
+                # regular DQN
+                q_tp1_values = Q_target(next_obs_batch).detach()
                 q_s_a_prime, a_prime = q_tp1_values.max(1)
-
-                # if current state is end of episode, then there is no next Q value
                 q_s_a_prime = (1 - done_mask) * q_s_a_prime 
 
-                # Compute Bellman error
                 # r + gamma * Q(s',a', theta_i_frozen) - Q(s, a, theta_i)
-                error = rew_t + gamma * q_s_a_prime - q_s_a
+                error = rew_batch + gamma * q_s_a_prime - q_s_a
 
             # clip the error and flip 
             clipped_error = -1.0 * error.clamp(-1, 1)

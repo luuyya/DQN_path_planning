@@ -44,7 +44,8 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
             # frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ
+            target_update_freq=TARGET_UPDATE_FREQ,
+            double_dqn=double_dqn
         )
     else:
         dqn_learning(
@@ -59,7 +60,8 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
             # frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ
+            target_update_freq=TARGET_UPDATE_FREQ,
+            double_dqn = double_dqn
         )
 
 def main():
