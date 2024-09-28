@@ -32,7 +32,7 @@ def dqn_learning(env,
           batch_size=32,
           gamma=0.99,
           learning_starts=50000,
-          learning_freq=4,
+          learning_freq=10,
           # frame_history_len=4,
           target_update_freq=10000):
 
@@ -73,51 +73,38 @@ def dqn_learning(env,
             sample = random.random()
             threshold = exploration.value(t)
             if sample > threshold:
-                obs = torch.from_numpy(observations).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
-                q_value_all_actions = Q(Variable(obs, volatile=True)).cpu() # 调用模型
+                input = torch.from_numpy(observations).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
+                q_value_all_actions = Q(input).cpu() # 调用模型
                 action = ((q_value_all_actions).data.max(1)[1])[0]
             else:
                 action = torch.IntTensor([[np.random.randint(num_actions)]])[0][0]
-        # todo:step
-        obs, reward, done, info = env.step(action)
 
-        # store effect of action
-        replay_buffer.store_effect(last_stored_frame_idx, action, reward, done)
+        obs, action, reward, next_state, done = env.step(action)
+        replay_buffer.store_effect(last_stored_frame_idx, action, reward, done) #存储其他信息
 
-        # reset env if reached episode boundary
         if done:
             obs = env.reset()
 
-        # update last_obs
         last_obs = obs
 
-        if (t > learning_starts and
-                t % learning_freq == 0 and
-                replay_buffer.can_sample(batch_size)):
+        if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)):# 模型训练
 
-            # sample transition batch from replay memory
-            # done_mask = 1 if next state is end of episode
-            obs_t, act_t, rew_t, obs_tp1, done_mask = replay_buffer.sample(batch_size)
-            obs_t = Variable(torch.from_numpy(obs_t)).type(dtype) / 255.0
-            act_t = Variable(torch.from_numpy(act_t)).type(dlongtype)
-            rew_t = Variable(torch.from_numpy(rew_t)).type(dtype)
-            obs_tp1 = Variable(torch.from_numpy(obs_tp1)).type(dtype) / 255.0
-            done_mask = Variable(torch.from_numpy(done_mask)).type(dtype)
+            # obs_t, act_t, rew_t, obs_tp1, done_mask = replay_buffer.sample(batch_size)
+            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(batch_size)
+            obs_batch = torch.from_numpy(obs_batch).type(dtype)
+            act_batch = torch.from_numpy(act_batch).type(dlongtype)
+            rew_batch = torch.from_numpy(rew_batch).type(dtype)
+            next_obs_batch = torch.from_numpy(next_obs_batch).type(dtype)
+            done_mask = torch.from_numpy(done_mask).type(dtype)
 
             # input batches to networks
             # get the Q values for current observations (Q(s,a, theta_i))
-            q_values = Q(obs_t)
-            q_s_a = q_values.gather(1, act_t.unsqueeze(1))
+            q_values = Q(obs_batch)
+            q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
             q_s_a = q_s_a.squeeze()
 
-            if (double_dqn):
-                # ---------------
-                #   double DQN
-                # ---------------
+            if (Q.name=="DQN"):
 
-                # get the Q values for best actions in obs_tp1 
-                # based off the current Q network
-                # max(Q(s', a', theta_i)) wrt a'
                 q_tp1_values = Q(obs_tp1).detach()
                 _, a_prime = q_tp1_values.max(1)
 
