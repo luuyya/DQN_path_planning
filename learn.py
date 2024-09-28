@@ -6,10 +6,10 @@ import itertools
 from collections import namedtuple
 from utils.replay_buffer import ReplayBuffer
 from utils.schedules import LinearSchedule
-# from logger import Logger
+from logger import Logger
 import time
-from utils.env import Map
 import os
+import sys
 
 OptimizerSpec = namedtuple("OptimizerSpec", ["constructor", "kwargs"])
 
@@ -19,7 +19,7 @@ dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTens
 dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
 
 # 设置 Logger
-# logger = Logger('./logs')
+logger = Logger('./logs')
 def to_np(x):
     return x.data.cpu().numpy()
 
@@ -157,7 +157,7 @@ def dqn_learning(env,
             add_str = ''
             if (double_dqn):
                 add_str = 'double' 
-            if (dueling_dqn):
+            if (not Q.name=='DQN'):
                 add_str = 'dueling'
             model_save_path = "models/%s_%s_%d_%s.model" %(str(env_id), add_str, t, str(time.ctime()).replace(' ', '_'))
             torch.save(Q.state_dict(), model_save_path)
