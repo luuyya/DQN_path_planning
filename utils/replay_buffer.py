@@ -13,6 +13,7 @@ class ReplayBuffer(object):
     """缓冲区，存放状态动作空间"""
     def __init__(self, size):
         self.size = size
+        # self.frame_history_len = frame_history_len
 
         self.next_idx = 0
         self.num_in_buffer = 0

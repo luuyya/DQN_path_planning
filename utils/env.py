@@ -136,7 +136,7 @@ class Map:
 
 
 if __name__ == '__main__':
-    env = Map(size=8, obstacle_ratio=0.1, seed=34)
+    env = Map(size=20, obstacle_ratio=0.3, seed=34)
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
