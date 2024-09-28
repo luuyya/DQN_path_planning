@@ -37,7 +37,7 @@ def dqn_learning(env,
           target_update_freq=10000):
 
     #todo: 可以修改决策数
-    in_channels = 4 # 输入通道数
+    in_channels = 1 # 输入通道数
     num_actions = 4
     
     # 定义网络

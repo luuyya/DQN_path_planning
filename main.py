@@ -87,14 +87,13 @@ def main():
             print(f"CUDA Device: {torch.cuda.current_device()}")
 
     # Create the grid map environment
-    map_instance = Map(size=args.map_size, obstacle_ratio=args.obstacle_ratio, seed=args.seed)
-    map_instance.create_random_map()
-    start, end = map_instance.initialize_start_end()
-    print(f"Start: {start}, End: {end}")
+    env = Map(size=args.map_size, obstacle_ratio=args.obstacle_ratio, seed=args.seed)
+    env.create_random_map()
+    env.initialize_start_end()
+    print(f"Start: {env.start}, End: {env.end}")
 
-    env = map_instance  # 使用 map_instance 作为环境对象
     grid = env.get_grid()  # 获取网格数据
-    plot.plot_map(grid, start, end)  # 将网格数据传递给绘图函数      
+    plot.plot_map(grid, env.start, env.end)  # 将网格数据传递给绘图函数      
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)
