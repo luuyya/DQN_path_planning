@@ -33,7 +33,7 @@ def dqn_learning(env,
           gamma=0.99,
           learning_starts=50000,
           learning_freq=4,
-          frame_history_len=4,
+          # frame_history_len=4,
           target_update_freq=10000):
 
     #todo: 可以修改决策数
@@ -53,7 +53,7 @@ def dqn_learning(env,
     num_param_updates = 0
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
-    last_obs = env.reset() #?
+    last_obs = env.reset()
     LOG_EVERY_N_STEPS = 1000
     SAVE_MODEL_EVERY_N_STEPS = 100000
 
@@ -62,11 +62,8 @@ def dqn_learning(env,
         if env.get_total_step()>stopping_num:
             break
 
-        ### 2. Step the env and store the transition
-        last_stored_frame_idx = replay_buffer.store_frame(last_obs)
-
-        # get observations to input to Q network (need to append prev frames)
-        observations = replay_buffer.encode_recent_observation()
+        last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
+        observations = replay_buffer.encode_recent_observation() # 得到前一个状态
 
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:

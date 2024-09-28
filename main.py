@@ -37,13 +37,13 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=Dueling_DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=num_timesteps,
+            stopping_num=num_timesteps,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
-            frame_history_len=FRAME_HISTORY_LEN,
+            # frame_history_len=FRAME_HISTORY_LEN,
             target_update_freq=TARGET_UPDATE_FREQ
         )
     else:
@@ -52,13 +52,13 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_criterion=num_timesteps,
+            stopping_num=num_timesteps,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
             learning_starts=LEARNING_STARTS,
             learning_freq=LEARNING_FREQ,
-            frame_history_len=FRAME_HISTORY_LEN,
+            # frame_history_len=FRAME_HISTORY_LEN,
             target_update_freq=TARGET_UPDATE_FREQ
         )
 
