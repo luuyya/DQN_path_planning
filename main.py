@@ -5,6 +5,7 @@ import numpy as np
 
 from model import DQN, Dueling_DQN
 from learn import dqn_learning, OptimizerSpec
+from test import grid_map_test
 from utils.env import Map
 from utils.schedules import *
 from utils import plot
@@ -118,6 +119,8 @@ def main():
 
     else:
         # Run Test
+        print(f"Testing with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
+        grid_map_test(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
         pass
 
 if __name__ == '__main__':
