@@ -161,7 +161,9 @@ def dqn_learning(env,
                 add_str = 'double'
             if (not Q.name=='DQN'):
                 add_str = 'dueling'
-            model_save_path = "models/%s_%d_%s.model" %(add_str, t, str(time.ctime()).replace(' ', '_'))
+            # model_save_path = "models/%s_%d_%s.model" %(add_str, t, str(time.ctime()).replace(' ', '_'))
+            timestamp = str(time.strftime("%Y-%m-%d_%H-%M-%S"))
+            model_save_path = "models/%s_%d_%s.model" % (add_str, t, timestamp)
             torch.save(Q.state_dict(), model_save_path)
 
         print("this is epoch ",t)
