@@ -103,16 +103,18 @@ def dqn_learning(env,
 
             # input batches to networks
             # get the Q values for current observations (Q(s,a, theta_i))
-            q_values = Q(obs_batch).cpu()
+            # print(obs_batch.unsqueeze(0).shape)
+            q_values = Q(obs_batch.unsqueeze(1)).cpu()
+            
             q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
             q_s_a = q_s_a.squeeze()
 
             if (double_dqn):
                 # Double dqn
-                q_tp1_values = Q(next_obs_batch).detach()
+                q_tp1_values = Q(next_obs_batch.unsqueeze(1)).detach()
                 _, a_prime = q_tp1_values.max(1)
 
-                q_target_tp1_values = Q_target(next_obs_batch).detach()
+                q_target_tp1_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
                 q_target_s_a_prime = q_target_tp1_values.gather(1, a_prime.unsqueeze(1))
                 q_target_s_a_prime = q_target_s_a_prime.squeeze()
 
@@ -122,7 +124,7 @@ def dqn_learning(env,
                 error = rew_batch + gamma * q_target_s_a_prime - q_s_a
             else:
                 # regular DQN
-                q_tp1_values = Q_target(next_obs_batch).detach()
+                q_tp1_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
                 q_s_a_prime, a_prime = q_tp1_values.max(1)
                 q_s_a_prime = (1 - done_mask) * q_s_a_prime 
 
@@ -134,7 +136,9 @@ def dqn_learning(env,
 
             # backwards pass
             optimizer.zero_grad()
-            q_s_a.backward(clipped_error.data.unsqueeze(1))
+
+            # print(clipped_error.data.shape)
+            q_s_a.backward(clipped_error.data)
 
             # update
             optimizer.step()
