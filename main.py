@@ -5,7 +5,7 @@ import numpy as np
 
 from model import DQN, Dueling_DQN
 from learn import dqn_learning, OptimizerSpec
-# from test import grid_map_test
+from test import dqn_testing
 from utils.env import Map
 from utils.schedules import *
 from utils import plot
@@ -62,6 +62,10 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             target_update_freq=TARGET_UPDATE_FREQ,
             double_dqn = double_dqn
         )
+
+def grid_map_test(env, num_timesteps, double_dqn, dueling_dqn):
+    #todo: 调用test中的dqn_testing函数
+    pass
 
 def main():
     parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN, choose Train and Test Module')
