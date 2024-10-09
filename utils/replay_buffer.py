@@ -10,10 +10,9 @@ def sample_n_unique(sampling_f, n):
     return res
 
 class ReplayBuffer(object):
-    """缓冲区，存放状态动作空间"""
+    """缓冲区，存放状态动作空间，一个循环队列"""
     def __init__(self, size):
         self.size = size
-        # self.frame_history_len = frame_history_len
 
         self.next_idx = 0
         self.num_in_buffer = 0
@@ -24,42 +23,42 @@ class ReplayBuffer(object):
         self.done = None
 
     def can_sample(self, batch_size):
+        #判断是否能够进行采样
         return batch_size + 1 <= self.num_in_buffer
 
-    def _encode_sample(self, idxes):
-        # obs_batch      = np.concatenate([self._encode_observation(idx)[None] for idx in idxes], 0)
-        obs_batch      = np.array([self.obs[idx] for idx in idxes])
-        act_batch      = self.action[idxes]
-        rew_batch      = self.reward[idxes]
-        # next_obs_batch = np.concatenate([self._encode_observation(idx + 1)[None] for idx in idxes], 0)
-        next_obs_batch = np.array([self.obs[(idx + 1) % self.size] for idx in idxes])
-        done_mask      = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
+    def encode_sample(self, indexes):
+        obs_batch = np.array([self.obs[idx] for idx in indexes])
+        act_batch = self.action[indexes]
+        rew_batch = self.reward[indexes]
+        next_obs_batch = np.array([self.obs[(idx + 1) % self.size] for idx in indexes])
+        done_mask = np.array([1.0 if self.done[idx] else 0.0 for idx in indexes], dtype=np.float32)
 
         return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
 
 
     def sample(self, batch_size):
-        assert self.can_sample(batch_size)
-        idxes = sample_n_unique(lambda: random.randint(0, self.num_in_buffer - 2), batch_size)
-        return self._encode_sample(idxes)
+        assert self.can_sample(batch_size),"buffer未存储到足够的数据"
+        # indexes = sample_n_unique(lambda: random.randint(0, self.num_in_buffer - 2), batch_size)
+        indexes=[]
+        while len(indexes) < batch_size:
+            candidate = random.randint(0, self.num_in_buffer - 2)
+            if candidate not in indexes:
+                indexes.append(candidate)
+
+        return self.encode_sample(indexes)
 
     def encode_recent_observation(self):
-        assert self.num_in_buffer > 0
-        # return self._encode_observation((self.next_idx - 1) % self.size)
+        assert self.num_in_buffer > 0,"buffer未存储数据"
         return self.obs[(self.next_idx - 1) % self.size]
-
-    def _encode_observation(self, idx):
-        # 不用那么复杂，直接返回状态
-        return self.obs[idx]
 
     def store_frame(self, frame):
         if self.obs is None:
-            self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
-            self.action   = np.empty([self.size],                     dtype=np.int32)
-            self.reward   = np.empty([self.size],                     dtype=np.float32)
-            self.done     = np.empty([self.size],                     dtype=bool)
-        self.obs[self.next_idx] = frame
+            self.obs = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
+            self.action = np.empty([self.size], dtype=np.int32)
+            self.reward = np.empty([self.size], dtype=np.float32)
+            self.done = np.empty([self.size], dtype=bool)
 
+        self.obs[self.next_idx] = frame
         ret = self.next_idx
         self.next_idx = (self.next_idx + 1) % self.size
         self.num_in_buffer = min(self.size, self.num_in_buffer + 1)
