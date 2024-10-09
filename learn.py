@@ -23,7 +23,8 @@ logger = Logger('./logs')
 def to_np(x):
     return x.data.cpu().numpy()
 
-def dqn_learning(env,
+def dqn_learning(
+          env,
           q_func,
           optimizer_spec,
           exploration,
@@ -35,12 +36,10 @@ def dqn_learning(env,
           learning_freq,
           # frame_history_len=4,
           target_update_freq,
-          double_dqn
+          double_dqn,
+          in_channels,
+          num_actions
         ):
-
-
-    in_channels = 1 # 输入通道数
-    num_actions = 4 # 决策数
     
     # 定义网络
     Q = q_func(in_channels, num_actions).type(dtype)
@@ -86,6 +85,7 @@ def dqn_learning(env,
         obs, action, reward, next_state, done = env.step(action)
         replay_buffer.store_effect(last_stored_frame_idx, action, reward, done) #存储其他信息
 
+        #todo: 不能简单的重复，会造成难以到达终点的问题
         if done:
             obs = env.reset()
 
