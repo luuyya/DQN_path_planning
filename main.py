@@ -5,6 +5,7 @@ import numpy as np
 
 from model import DQN, Dueling_DQN
 from learn import dqn_learning, OptimizerSpec
+from test import grid_map_test
 from utils.env import Map
 from utils.schedules import *
 from utils import plot
@@ -18,9 +19,7 @@ LEARNING_FREQ = 4 #四个环境交互步骤（例如，每执行四次动作）�
 LEARNING_RATE = 0.00025
 ALPHA = 0.95 #计算优先经验重放的参数，控制经验重放的优先级
 EPS = 0.01
-EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
-# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。
-# 0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
+EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
 LEARNING_STARTS = 10000 #开始训练前所需的初始经验数量
 
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
@@ -65,13 +64,13 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
         )
 
 def main():
-    parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN')
+    parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN, choose Train and Test Module')
     subparsers = parser.add_subparsers(title="subcommands", dest="subcommand")
 
-
+    #train
     #各种参数设置
     train_parser = subparsers.add_parser("train", help="Train an RL agent for grid map path planning")
-    train_parser.add_argument("--map-size", type=int, default=8, help="Size of the grid map")
+    train_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
     train_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
     train_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
@@ -79,6 +78,18 @@ def main():
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
     train_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
     train_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
+
+    #todo:test
+    #各种参数设置
+    test_parser = subparsers.add_parser("test", help="Test an RL agent for grid map path planning")
+    test_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
+    test_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
+    test_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
+    #训练时间步长
+    # test_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
+    test_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
+    test_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
+    test_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
 
     args = parser.parse_args()
 
@@ -94,15 +105,23 @@ def main():
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
 
-    grid = env.get_grid()  # 获取网格数据
+    # grid = env.get_grid()  # 获取网格数据
     # plot.plot_map(grid, env.start, env.end)  # 将网格数据传递给绘图函数      
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)
-    
-    # Run training
-    print(f"Training with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-    grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+    is_train = args.subcommand=="train"
+
+    if is_train:
+        # Run training
+        print(f"Training with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
+        grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+
+    else:
+        # Run Test
+        print(f"Testing with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
+        grid_map_test(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        pass
 
 if __name__ == '__main__':
     main()
