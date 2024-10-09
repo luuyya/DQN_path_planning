@@ -63,9 +63,11 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             double_dqn = double_dqn
         )
 
-def grid_map_test(env, num_timesteps, double_dqn, dueling_dqn):
+def grid_map_test(env, double_dqn, dueling_dqn):
     #todo: 调用test中的dqn_testing函数
-    pass
+    dqn_testing(
+
+    )
 
 def main():
     parser = argparse.ArgumentParser(description='Path Planning with DQN and Dueling DQN, choose Train and Test Module')
@@ -124,7 +126,7 @@ def main():
     else:
         # Run Test
         print(f"Testing with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_test(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
         pass
 
 if __name__ == '__main__':

@@ -104,7 +104,7 @@ def dqn_learning(env,
             # input batches to networks
             # get the Q values for current observations (Q(s,a, theta_i))
             # print(obs_batch.unsqueeze(0).shape)
-            q_values = Q(obs_batch.unsqueeze(1)).cpu()
+            q_values = Q(obs_batch.unsqueeze(1))
             
             q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
             q_s_a = q_s_a.squeeze()
