@@ -112,10 +112,8 @@ class Map:
                     done = True
             else:
                 reward = -10  # 碰到障碍物的惩罚
-                done = True
         else:
             reward = -10  # 出界的惩罚
-            done = True
 
         # 更新当前回合的奖励
         self.current_episode_reward += reward
