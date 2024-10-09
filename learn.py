@@ -57,7 +57,7 @@ def dqn_learning(env,
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
     # LOG_EVERY_N_STEPS = 1000
-    SAVE_MODEL_EVERY_N_STEPS = 100
+    SAVE_MODEL_EVERY_N_STEPS = 1000
 
     for t in itertools.count():
         # todo:停止迭代条件
@@ -80,6 +80,8 @@ def dqn_learning(env,
                 action = ((q_value_all_actions).data.max(1)[1])[0]
             else:
                 action = torch.IntTensor([[np.random.randint(num_actions)]])[0][0]
+            action = action.item()
+            # print(action)
 
         obs, action, reward, next_state, done = env.step(action)
         replay_buffer.store_effect(last_stored_frame_idx, action, reward, done) #存储其他信息
@@ -164,7 +166,7 @@ def dqn_learning(env,
             # model_save_path = "models/%s_%d_%s.model" %(add_str, t, str(time.ctime()).replace(' ', '_'))
             timestamp = str(time.strftime("%Y-%m-%d_%H-%M-%S"))
             model_save_path = "models/%s_%d_%s.model" % (add_str, t, timestamp)
-            torch.save(Q.state_dict(), model_save_path)
+            # torch.save(Q.state_dict(), model_save_path)
 
         print("this is epoch ",t)
 

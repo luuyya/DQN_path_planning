@@ -21,7 +21,7 @@ EPS = 0.01
 EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)
 # 1000000：表示在训练的前100万步内，探索概率将逐渐降低。
 # 0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
-LEARNING_STARTS = 50000 #开始训练前所需的初始经验数量
+LEARNING_STARTS = 10000 #开始训练前所需的初始经验数量
 
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
 
