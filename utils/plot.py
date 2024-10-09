@@ -39,3 +39,7 @@ def plot_map(grid, start, end):
     plt.title("Map Visualization")
     
     plt.show()
+
+def plot_path(env, path):
+    #todo: draw path on the map
+    pass
