@@ -26,21 +26,21 @@ def to_np(x):
 def dqn_learning(env,
           q_func,
           optimizer_spec,
-          exploration=LinearSchedule(1000000, 0.1),
-          stopping_num=100000,
-          replay_buffer_size=1000000,
-          batch_size=32,
-          gamma=0.99,
-          learning_starts=50000,
-          learning_freq=10,
+          exploration,
+          stopping_num,
+          replay_buffer_size,
+          batch_size,
+          gamma,
+          learning_starts,
+          learning_freq,
           # frame_history_len=4,
-          target_update_freq=100,
-          double_dqn=False
+          target_update_freq,
+          double_dqn
         ):
 
-    #todo: 可以修改决策数
+
     in_channels = 1 # 输入通道数
-    num_actions = 4
+    num_actions = 4 # 决策数
     
     # 定义网络
     Q = q_func(in_channels, num_actions).type(dtype)
