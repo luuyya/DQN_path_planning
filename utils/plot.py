@@ -41,5 +41,34 @@ def plot_map(grid, start, end):
     plt.show()
 
 def plot_path(env, path):
-    #todo: draw path on the map
-    pass
+    """
+    绘制地图并显示路径。
+
+    参数：
+    - env: Map 类的实例，包含地图信息
+    - path: list，包含路径上的坐标
+    """
+    # 创建地图的副本以进行绘制
+    grid_map = np.array(env.map)
+
+    # 绘制路径
+    for position in path:
+        grid_map[position[0], position[1]] = 2  # 用值 2 表示路径
+
+    # 设置绘图
+    plt.figure(figsize=(10, 10))
+    plt.imshow(grid_map, cmap='gray_r')
+    plt.title('Path Planning Result')
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.xticks(range(env.size))
+    plt.yticks(range(env.size))
+    plt.grid(True, which='both', color='black', linestyle='--', linewidth=0.5)
+
+    # 显示起点和终点
+    start, end = env.start, env.end
+    plt.scatter(start[1], start[0], color='green', s=100, label='Start')
+    plt.scatter(end[1], end[0], color='red', s=100, label='End')
+
+    plt.legend()
+    plt.show()
