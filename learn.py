@@ -61,7 +61,7 @@ def dqn_learning(env,
 
     for t in itertools.count():
         # todo:停止迭代条件
-        if env.get_total_step()>stopping_num:
+        if env.get_total_depth() > stopping_num:
             break
 
         last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
