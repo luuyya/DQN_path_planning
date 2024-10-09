@@ -5,7 +5,7 @@ import numpy as np
 
 from model import DQN, Dueling_DQN
 from learn import dqn_learning, OptimizerSpec
-from test import grid_map_test
+# from test import grid_map_test
 from utils.env import Map
 from utils.schedules import *
 from utils import plot

@@ -160,18 +160,17 @@ def dqn_learning(env,
 
         #模型保存
         if t % SAVE_MODEL_EVERY_N_STEPS == 0:
-            if not os.path.exists("models"):
-                os.makedirs("models")
+            os.makedirs("models", exist_ok=True)
             add_str = ''
-            if (double_dqn):
+            if double_dqn:
                 add_str = 'double'
-            if (not Q.name=='DQN'):
+            if Q.name != 'DQN':
                 add_str = 'dueling'
-            timestamp = str(time.strftime("%Y-%m-%d_%H-%M-%S"))
-            model_save_path = "models/%s_%d_%s.model" % (add_str, t, timestamp)
+            timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+            model_save_path = f"models/{add_str}_{t}_{timestamp}.model"
             torch.save(Q.state_dict(), model_save_path)
 
-        print("epoch ",t)
+        print(f"epoch {t}")
 
         episode_rewards = env.get_episode_rewards()
         if len(episode_rewards) > 0:
@@ -180,44 +179,42 @@ def dqn_learning(env,
 
         if t % LOG_EVERY_N_STEPS == 0:
             print("---------------------------------")
-            print("Timestep %d" % t)
-            print("learning started? %d" % (t > learning_starts))
+            print(f"Timestep {t}")
+            print(f"learning started? {t > learning_starts}")
             if len(episode_rewards) > 0:
-                print("mean reward (100 episodes) %f" % mean_episode_reward)
-                print("best mean reward %f" % best_mean_episode_reward)
+                print(f"mean reward (100 episodes) {mean_episode_reward:.6f}")
+                print(f"best mean reward {best_mean_episode_reward:.6f}")
             else:
                 print("mean reward (100 episodes) -")
                 print("best mean reward -")
-            print("episodes %d" % len(episode_rewards))
-            print("exploration %f" % exploration.value(t))
-            print("learning_rate %f" % optimizer_spec.kwargs['lr'])
+            print(f"episodes {len(episode_rewards)}")
+            print(f"exploration {exploration.value(t):.6f}")
+            print(f"learning_rate {optimizer_spec.kwargs['lr']:.6f}")
             sys.stdout.flush()
-        
-            #============ TensorBoard logging ============#
+
+            # ============ TensorBoard logging ============#
+            def log_info(info_dict, step):
+                for tag, value in info_dict.items():
+                    logger.scalar_summary(tag, value, step)
+
             # (1) Log the scalar values
             info = {
-                'learning_started': (t > learning_starts),
+                'learning_started': t > learning_starts,
                 'num_episodes': len(episode_rewards),
                 'exploration': exploration.value(t),
                 'learning_rate': optimizer_spec.kwargs['lr'],
             }
-        
-            for tag, value in info.items():
-                logger.scalar_summary(tag, value, t+1)
-        
+            log_info(info, t + 1)
+
             if len(episode_rewards) > 0:
                 info = {
                     'last_episode_rewards': episode_rewards[-1],
                 }
-        
-                for tag, value in info.items():
-                    logger.scalar_summary(tag, value, t+1)
-        
-            if (best_mean_episode_reward != -float('inf')):
+                log_info(info, t + 1)
+
+            if best_mean_episode_reward != -float('inf'):
                 info = {
                     'mean_episode_reward_last_100': mean_episode_reward,
-                    'best_mean_episode_reward': best_mean_episode_reward
+                    'best_mean_episode_reward': best_mean_episode_reward,
                 }
-        
-                for tag, value in info.items():
-                    logger.scalar_summary(tag, value, t+1)
+                log_info(info, t + 1)
