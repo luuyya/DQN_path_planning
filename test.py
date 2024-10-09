@@ -2,11 +2,12 @@ import torch
 import numpy as np
 import os
 from utils.env import Map
-from utils.plot import plot_map, plot_path
+from utils.plot import plot_path
+from model import DQN
 
 def get_newest_model(models_path):
     file_names = os.listdir(models_path)
-    model_path = file_names[-1]
+    model_path = models_path + "/" + file_names[-1]
     return torch.load(model_path)
 
 def dqn_testing(models_path, env):
