@@ -6,7 +6,7 @@ import itertools
 from collections import namedtuple
 from utils.replay_buffer import ReplayBuffer
 from utils.schedules import LinearSchedule
-# from logger import Logger
+from logger import Logger
 import time
 import os
 import sys
@@ -19,7 +19,7 @@ dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTens
 dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
 
 # 设置 Logger
-# logger = Logger('./logs')
+logger = Logger('./logs')
 def to_np(x):
     return x.data.cpu().numpy()
 
@@ -56,7 +56,7 @@ def dqn_learning(env,
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
-    # LOG_EVERY_N_STEPS = 1000
+    LOG_EVERY_N_STEPS = 1000
     SAVE_MODEL_EVERY_N_STEPS = 1000
 
     for t in itertools.count():
@@ -148,13 +148,13 @@ def dqn_learning(env,
             if num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
 
-        #     # (2) Log values and gradients of the parameters (histogram)
-        #     if t % LOG_EVERY_N_STEPS == 0:
-        #         for tag, value in Q.named_parameters():
-        #             tag = tag.replace('.', '/')
-        #             logger.histo_summary(tag, to_np(value), t+1)
-        #             logger.histo_summary(tag+'/grad', to_np(value.grad), t+1)
-        #     #####
+            # (2) Log values and gradients of the parameters (histogram)
+            if t % LOG_EVERY_N_STEPS == 0:
+                for tag, value in Q.named_parameters():
+                    tag = tag.replace('.', '/')
+                    logger.histo_summary(tag, to_np(value), t+1)
+                    logger.histo_summary(tag+'/grad', to_np(value.grad), t+1)
+            #####
         #
         # ### 4. Log progress
 
@@ -167,53 +167,57 @@ def dqn_learning(env,
                 add_str = 'double'
             if (not Q.name=='DQN'):
                 add_str = 'dueling'
-            # model_save_path = "models/%s_%d_%s.model" %(add_str, t, str(time.ctime()).replace(' ', '_'))
             timestamp = str(time.strftime("%Y-%m-%d_%H-%M-%S"))
             model_save_path = "models/%s_%d_%s.model" % (add_str, t, timestamp)
-            # torch.save(Q.state_dict(), model_save_path)
+            torch.save(Q.state_dict(), model_save_path)
 
-        print("this is epoch ",t)
+        print("epoch ",t)
 
-        # episode_rewards = get_wrapper_by_name(env, "Monitor").get_episode_rewards()
-        # if len(episode_rewards) > 0:
-        #     mean_episode_reward = np.mean(episode_rewards[-100:])
-        #     best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
-        # if t % LOG_EVERY_N_STEPS == 0:
-        #     print("---------------------------------")
-        #     print("Timestep %d" % (t,))
-        #     print("learning started? %d" % (t > learning_starts))
-        #     print("mean reward (100 episodes) %f" % mean_episode_reward)
-        #     print("best mean reward %f" % best_mean_episode_reward)
-        #     print("episodes %d" % len(episode_rewards))
-        #     print("exploration %f" % exploration.value(t))
-        #     print("learning_rate %f" % optimizer_spec.kwargs['lr'])
-        #     sys.stdout.flush()
-        #
-        #     #============ TensorBoard logging ============#
-        #     # (1) Log the scalar values
-        #     info = {
-        #         'learning_started': (t > learning_starts),
-        #         'num_episodes': len(episode_rewards),
-        #         'exploration': exploration.value(t),
-        #         'learning_rate': optimizer_spec.kwargs['lr'],
-        #     }
-        #
-        #     for tag, value in info.items():
-        #         logger.scalar_summary(tag, value, t+1)
-        #
-        #     if len(episode_rewards) > 0:
-        #         info = {
-        #             'last_episode_rewards': episode_rewards[-1],
-        #         }
-        #
-        #         for tag, value in info.items():
-        #             logger.scalar_summary(tag, value, t+1)
-        #
-        #     if (best_mean_episode_reward != -float('inf')):
-        #         info = {
-        #             'mean_episode_reward_last_100': mean_episode_reward,
-        #             'best_mean_episode_reward': best_mean_episode_reward
-        #         }
-        #
-        #         for tag, value in info.items():
-        #             logger.scalar_summary(tag, value, t+1)
+        episode_rewards = env.get_episode_rewards()
+        if len(episode_rewards) > 0:
+            mean_episode_reward = np.mean(episode_rewards[-100:])
+            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
+
+        if t % LOG_EVERY_N_STEPS == 0:
+            print("---------------------------------")
+            print("Timestep %d" % t)
+            print("learning started? %d" % (t > learning_starts))
+            if len(episode_rewards) > 0:
+                print("mean reward (100 episodes) %f" % mean_episode_reward)
+                print("best mean reward %f" % best_mean_episode_reward)
+            else:
+                print("mean reward (100 episodes) -")
+                print("best mean reward -")
+            print("episodes %d" % len(episode_rewards))
+            print("exploration %f" % exploration.value(t))
+            print("learning_rate %f" % optimizer_spec.kwargs['lr'])
+            sys.stdout.flush()
+        
+            #============ TensorBoard logging ============#
+            # (1) Log the scalar values
+            info = {
+                'learning_started': (t > learning_starts),
+                'num_episodes': len(episode_rewards),
+                'exploration': exploration.value(t),
+                'learning_rate': optimizer_spec.kwargs['lr'],
+            }
+        
+            for tag, value in info.items():
+                logger.scalar_summary(tag, value, t+1)
+        
+            if len(episode_rewards) > 0:
+                info = {
+                    'last_episode_rewards': episode_rewards[-1],
+                }
+        
+                for tag, value in info.items():
+                    logger.scalar_summary(tag, value, t+1)
+        
+            if (best_mean_episode_reward != -float('inf')):
+                info = {
+                    'mean_episode_reward_last_100': mean_episode_reward,
+                    'best_mean_episode_reward': best_mean_episode_reward
+                }
+        
+                for tag, value in info.items():
+                    logger.scalar_summary(tag, value, t+1)

@@ -17,6 +17,8 @@ class Map:
         self.end = None
         self.cur = None
         self.depth = 0
+        self.episode_rewards = []  # 用于记录每一回合的累积奖励
+        self.current_episode_reward = 0  # 当前回合奖励
 
         if self.seed is not None:
             np.random.seed(self.seed)
@@ -58,13 +60,13 @@ class Map:
         self.end = available_coords[end_index]
 
         self.cur = self.start
-    
+
     def get_grid(self):
         return self.grid
-    
+
     def get_total_depth(self):
         return self.depth
-    
+
     def step(self, action):
         """
         根据动作更新当前状态，并返回当前状态，动作，奖励，下一个状态，以及是否结束
@@ -115,10 +117,13 @@ class Map:
             reward = -10  # 出界的惩罚
             done = True
 
+        # 更新当前回合的奖励
+        self.current_episode_reward += reward
+
         next_state[self.cur[0]][self.cur[1]] = 5
         next_state[self.end[0]][self.end[1]] = 6
         return current_state, action, reward, next_state, done
-    
+
     def reset(self):
         """
         重置环境，返回初始状态
@@ -127,12 +132,25 @@ class Map:
         self.cur = self.start.copy()  # 重置当前位置为起点
         self.depth = 0  # 重置深度
 
+        # 将当前回合的奖励记录到回合奖励列表中
+        if self.current_episode_reward != 0:
+            self.episode_rewards.append(self.current_episode_reward)
+        self.current_episode_reward = 0  # 重置当前回合奖励
+
         # 创建初始状态的网格副本
         grid = self.grid.copy()
         grid[self.cur[0]][self.cur[1]] = 5  # 标记起点
         grid[self.end[0]][self.end[1]] = 6  # 标记终点
 
         return grid
+
+    def get_episode_rewards(self):
+        """
+        获取所有回合的累积奖励
+        :return: 每一回合的累积奖励列表
+        """
+        return self.episode_rewards
+
 
 
 if __name__ == '__main__':
