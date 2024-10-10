@@ -1,74 +1,81 @@
 import numpy as np
 import random
 
-def sample_n_unique(sampling_f, n):
-    res = []
-    while len(res) < n:
-        candidate = sampling_f()
-        if candidate not in res:
-            res.append(candidate)
-    return res
-
 class ReplayBuffer(object):
-    """缓冲区，存放状态动作空间，一个循环队列"""
+    """
+    缓冲区，存放状态动作空间，一个循环队列
+    存储的数据：
+    当前状态
+    行动
+    回报
+    判断因子：0正常 1到达终点 2碰到障碍物或者出界
+    下一个状态
+    """
     def __init__(self, size):
         self.size = size
 
         self.next_idx = 0
         self.num_in_buffer = 0
 
-        self.obs = None
+        self.cur_obs = None
         self.action = None
         self.reward = None
         self.done = None
+        self.next_obs = None
 
     def can_sample(self, batch_size):
         #判断是否能够进行采样
-        return batch_size + 1 <= self.num_in_buffer
+        return batch_size <= self.num_in_buffer
 
-    def encode_sample(self, indexes):
-        obs_batch = np.array([self.obs[idx] for idx in indexes])
-        act_batch = self.action[indexes]
-        rew_batch = self.reward[indexes]
-        next_obs_batch = np.array([self.obs[(idx + 1) % self.size] for idx in indexes])
-        done_mask = np.array([1.0 if self.done[idx] else 0.0 for idx in indexes], dtype=np.float32)
+    # def encode_sample(self, indexes):
+    #     obs_batch = np.array([self.obs[idx] for idx in indexes])
+    #     act_batch = self.action[indexes]
+    #     rew_batch = self.reward[indexes]
+    #     next_obs_batch = np.array([self.obs[(idx + 1) % self.size] for idx in indexes])
+    #     done_mask = np.array([1.0 if self.done[idx] else 0.0 for idx in indexes], dtype=np.float32)
+    #
+    #     return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
 
-        return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
+    def sample_batch(self, batch_size):
+        #在buffer中进行采样，得到batch_size大小的数据
+        assert self.can_sample(batch_size), "buffer未存储到足够的数据"
 
+        indices=list(range(self.num_in_buffer))
+        indexes=random.sample(indices,batch_size)
 
-    def sample(self, batch_size):
-        assert self.can_sample(batch_size),"buffer未存储到足够的数据"
-        # indexes = sample_n_unique(lambda: random.randint(0, self.num_in_buffer - 2), batch_size)
-        indexes=[]
-        while len(indexes) < batch_size:
-            candidate = random.randint(0, self.num_in_buffer - 2)
-            if candidate not in indexes:
-                indexes.append(candidate)
+        cur_obs_batch = self.cur_obs[indexes]
+        action_batch = self.action[indexes]
+        r_batch = self.reward[indexes]
+        next_obs_batch = self.next_obs[indexes]
+        done_batch = self.done[indexes]
 
-        return self.encode_sample(indexes)
+        return cur_obs_batch, action_batch, r_batch, next_obs_batch, done_batch
 
-    def encode_recent_observation(self):
-        assert self.num_in_buffer > 0,"buffer未存储数据"
-        return self.obs[(self.next_idx - 1) % self.size]
+    # def encode_recent_observation(self):
+    #     assert self.num_in_buffer > 0,"buffer未存储数据"
+    #     return self.obs[(self.next_idx - 1) % self.size]
 
-    def store_frame(self, frame):
-        if self.obs is None:
-            self.obs = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
+    def store_frame(self, cur, a, r, d, next):
+        if self.cur_obs is None:
+            self.cur_obs = np.empty([self.size]+cur.shape, dtype=np.int32)
             self.action = np.empty([self.size], dtype=np.int32)
             self.reward = np.empty([self.size], dtype=np.float32)
-            self.done = np.empty([self.size], dtype=bool)
+            self.done = np.empty([self.size], dtype=np.int32)
+            self.next_obs=np.empty([self.size]+cur.shape, dtype=np.int32)
 
-        self.obs[self.next_idx] = frame
-        ret = self.next_idx
+        self.cur_obs[self.next_idx] = cur
+        self.action[self.next_idx] = a
+        self.reward[self.next_idx] = r
+        self.done[self.next_idx] = d
+        self.next_obs[self.next_idx] = next
+
         self.next_idx = (self.next_idx + 1) % self.size
         self.num_in_buffer = min(self.size, self.num_in_buffer + 1)
 
-        return ret
-
-    def store_effect(self, idx, action, reward, done):
-        self.action[idx] = action
-        self.reward[idx] = reward
-        self.done[idx] = done
+    # def store_effect(self, idx, action, reward, done):
+    #     self.action[idx] = action
+    #     self.reward[idx] = reward
+    #     self.done[idx] = done
 
 
 if __name__ == '__main__':

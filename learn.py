@@ -54,17 +54,19 @@ def dqn_learning(
     num_param_updates = 0
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
-    last_obs = env.reset()
+    current_obs = env.reset()
     LOG_EVERY_N_STEPS = 1000
     SAVE_MODEL_EVERY_N_STEPS = 1000
+
+    actions_block=['0','1','2','3']
 
     for t in itertools.count():
         # todo:停止迭代条件
         if env.get_total_depth() > stopping_num:
             break
 
-        last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
-        observations = replay_buffer.encode_recent_observation() # 得到前一个状态
+        # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
+        # observations = replay_buffer.encode_recent_observation() # 得到前一个状态
 
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
@@ -74,22 +76,24 @@ def dqn_learning(
             sample = random.random()
             threshold = exploration.value(t)
             if sample > threshold:
-                input = torch.from_numpy(observations).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
-                q_value_all_actions = Q(input).cpu() # 调用模型
-                action = ((q_value_all_actions).data.max(1)[1])[0]
+                x = torch.from_numpy(current_obs).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
+                Q_all_actions = Q(x).cpu() # 调用模型
+                action = ((Q_all_actions).data.max(1)[1])[0]
             else:
                 action = torch.IntTensor([[np.random.randint(nums_actions)]])[0][0]
             action = action.item()
             # print(action)
 
-        obs, action, reward, next_state, done = env.step(action)
-        replay_buffer.store_effect(last_stored_frame_idx, action, reward, done) #存储其他信息
+        action, reward, done, next_state = env.step(action)
+        replay_buffer.store_frame(current_obs, action, reward, done, next_state) #存储信息
 
-        #todo: 不能简单的重复，会造成难以到达终点的问题
-        if done:
-            obs = env.reset()
+        if done=='1':
+            next_state = env.reset()
 
-        last_obs = obs
+        elif done=='2':
+            actions_block = actions_block - [action]
+
+        current_obs = next_state
 
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)):# 模型训练
 
