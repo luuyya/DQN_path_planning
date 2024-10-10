@@ -37,13 +37,13 @@ def dqn_learning(
           # frame_history_len=4,
           target_update_freq,
           double_dqn,
-          in_channels,
-          num_actions
+          input_channels,
+          nums_actions
         ):
     
     # 定义网络
-    Q = q_func(in_channels, num_actions).type(dtype)
-    Q_target = q_func(in_channels, num_actions).type(dtype)
+    Q = q_func(input_channels, nums_actions).type(dtype)
+    Q_target = q_func(input_channels, nums_actions).type(dtype)
 
     # 初始化优化器
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
