@@ -157,8 +157,8 @@ class Map:
 
     def get_current_state(self):
         cur_state = self.grid.copy()
-        cur_state[self.cur[0]][self.cur[1]] = 5
-        cur_state[self.end[0]][self.end[1]] = 6
+        cur_state[self.cur[0]][self.cur[1]] = CURRENT_POSITION
+        cur_state[self.end[0]][self.end[1]] = END_POSITION
 
         return cur_state
 
