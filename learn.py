@@ -58,7 +58,7 @@ def dqn_learning(
     LOG_EVERY_N_STEPS = 1000
     SAVE_MODEL_EVERY_N_STEPS = 1000
 
-    actions_block=['0','1','2','3']
+    actions_block=[0,1,2,3]
 
     for t in itertools.count():
         # todo:停止迭代条件
@@ -70,7 +70,7 @@ def dqn_learning(
 
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
-            action = np.random.randint(nums_actions)
+            action = np.random.choice(actions_block)
         else:
             # 贪心的探索
             sample = random.random()
