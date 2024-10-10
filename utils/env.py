@@ -171,16 +171,3 @@ if __name__ == '__main__':
     print(f"Start: {env.start}, End: {env.end}")
 
     grid = env.get_grid()  # 获取网格数据
-
-    print(env.get_total_depth())
-
-    res = env.step(0)
-    print(res[0])
-    print(res[1])
-    print(res[2])
-    print(res[3])
-    print(res[4])
-
-    print(env.get_total_depth())
-
-    
