@@ -68,7 +68,7 @@ def dqn_learning(
 
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
-            action = np.random.randint(num_actions)
+            action = np.random.randint(nums_actions)
         else:
             # 贪心的探索
             sample = random.random()
@@ -78,7 +78,7 @@ def dqn_learning(
                 q_value_all_actions = Q(input).cpu() # 调用模型
                 action = ((q_value_all_actions).data.max(1)[1])[0]
             else:
-                action = torch.IntTensor([[np.random.randint(num_actions)]])[0][0]
+                action = torch.IntTensor([[np.random.randint(nums_actions)]])[0][0]
             action = action.item()
             # print(action)
 
