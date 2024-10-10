@@ -101,7 +101,7 @@ class Map:
         # 初始化下一个状态、奖励和done标志
         next_state = copy.deepcopy(self.grid)
         reward = -1  # 默认奖励
-        done = False  # 默认未结束
+        done = 0  # 默认未结束
 
         # 检查下一个位置是否在边界内
         if (0 <= next_position[0] < self.size) and (0 <= next_position[1] < self.size):
@@ -114,11 +114,13 @@ class Map:
                 # 检查是否到达终点
                 if np.array_equal(self.cur, self.end):
                     reward = 10  # 到达终点的奖励
-                    done = True
+                    done = 1
             else:
                 reward = -10  # 碰到障碍物的惩罚
+                done = 2
         else:
             reward = -10  # 出界的惩罚
+            done = 2
 
         # 更新当前回合的奖励
         self.current_episode_reward += reward
@@ -126,7 +128,7 @@ class Map:
         next_state[self.cur[0]][self.cur[1]] = CURRENT_POSITION
         next_state[self.end[0]][self.end[1]] = END_POSITION
         
-        return current_state, action, reward, next_state, done
+        return action, reward, done, next_state
 
     def reset(self):
         """
