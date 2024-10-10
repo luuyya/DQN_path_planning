@@ -73,6 +73,7 @@ class Map:
         return self.depth
 
     def step(self, action):
+        #todo: need to do some modify
         """
         根据动作更新当前状态，并返回当前状态，动作，奖励，下一个状态，以及是否结束
         :param action: 移动的方向，0=上，1=下，2=左，3=右
@@ -153,6 +154,13 @@ class Map:
         :return: 每一回合的累积奖励列表
         """
         return self.episode_rewards
+
+    def get_current_state(self):
+        cur_state = self.grid.copy()
+        cur_state[self.cur[0]][self.cur[1]] = 5
+        cur_state[self.end[0]][self.end[1]] = 6
+
+        return cur_state
 
 
 

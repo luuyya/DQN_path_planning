@@ -22,6 +22,10 @@ EPS = 0.01
 EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
 LEARNING_STARTS = 10000 #开始训练前所需的初始经验数量
 
+INPUT_CHANNELS=1 #输入通道数
+NUMS_ACTIONS=4 #动作数
+MODELS_PATH='./models'
+
 def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
 
     #todo:
@@ -44,7 +48,9 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             learning_freq=LEARNING_FREQ,
             # frame_history_len=FRAME_HISTORY_LEN,
             target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn
+            double_dqn=double_dqn,
+            input_channels=INPUT_CHANNELS,
+            nums_actions=NUMS_ACTIONS
         )
     else:
         dqn_learning(
@@ -60,13 +66,20 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             learning_freq=LEARNING_FREQ,
             # frame_history_len=FRAME_HISTORY_LEN,
             target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn = double_dqn
+            double_dqn = double_dqn,
+            input_channels=INPUT_CHANNELS,
+            nums_actions=NUMS_ACTIONS
         )
 
 def grid_map_test(env, double_dqn, dueling_dqn):
     #todo: 调用test中的dqn_testing函数
     dqn_testing(
-
+        models_path=MODELS_PATH,
+        env=env,
+        dueling_dqn=dueling_dqn,
+        double_dqn=double_dqn,
+        input_channels=INPUT_CHANNELS,
+        nums_actions=NUMS_ACTIONS
     )
 
 def main():

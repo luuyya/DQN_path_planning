@@ -3,19 +3,26 @@ import numpy as np
 import os
 from utils.env import Map
 from utils.plot import plot_path
-from model import DQN
+from model import DQN,Dueling_DQN
 
 def get_newest_model(models_path):
     file_names = os.listdir(models_path)
-    model_path = models_path + "/" + file_names[-1]
-    return torch.load(model_path)
+    model_path = models_path+"/"+file_names[-1]
+    return model_path
 
-def dqn_testing(models_path, env):
+def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_actions):
     # 检查模型路径是否存在
-    assert os.path.exists(models_path), "Model file not found: {model_path}"
+    assert os.path.exists(file_path), "Model file not found: {model_path}"
 
     # 加载模型
-    model = get_newest_model(models_path)
+    model=None
+    if dueling_dqn:
+        model=Dueling_DQN(input_channels,nums_actions)
+    else:
+        model=DQN(input_channels,nums_actions)
+    model_path=get_newest_model(file_path)
+    state_dict = torch.load(model_path)
+    model.load_state_dict(state_dict)
     model.eval()  # 切换到评估模式
 
     # 获取起点和终点
@@ -26,9 +33,9 @@ def dqn_testing(models_path, env):
     path = [current_position]
 
     # 模拟模型对路径的预测
-    while current_position != end:
+    while not(current_position[0] == end[0] and current_position[1]==end[1]):
         # 将当前状态转换为模型输入
-        state = np.array(current_position, dtype=np.float32)
+        state=np.array(env.get_current_state(),dtype=np.float32)
         state_tensor = torch.from_numpy(state).unsqueeze(0)
 
         # 获取动作（模型的输出）
@@ -37,8 +44,12 @@ def dqn_testing(models_path, env):
             action = torch.argmax(q_values).item()
 
         # 执行动作并更新当前位置
-        current_position, _,_,done = env.step(action)
+        #todo:处理一下碰到障碍物的情况
+        _, _,_,_,done = env.step(action)
+        current_position=env.cur
         path.append(current_position)
+
+        print(current_position)
 
         # 检查是否陷入死循环（例如遇到障碍物无法前进）
         if len(path) > env.size*env.size:
@@ -58,4 +69,4 @@ if __name__ == "__main__":
     env.create_random_map()
     env.initialize_start_end()
 
-    dqn_testing(folder_path, env)
+    dqn_testing(folder_path, env, False,False,1,4)
