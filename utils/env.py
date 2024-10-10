@@ -1,7 +1,12 @@
+import copy
 import numpy as np
 
+CURRENT_POSITION = 2
+END_POSITION = 3
 
 class Map:
+    
+
     def __init__(self, size=8, obstacle_ratio=0.1, seed=None):
         """
         初始化 Map 类
@@ -84,26 +89,25 @@ class Map:
         if action not in directions:
             raise ValueError("无效的动作。")
 
-        current_state = self.grid.copy()  # 保存当前状态
-        current_state[self.cur[0]][self.cur[1]] = 5
-        current_state[self.end[0]][self.end[1]] = 6
+        current_state = copy.deepcopy(self.grid)  # 保存当前状态
+        current_state[self.cur[0], self.cur[1]] = CURRENT_POSITION
+        current_state[self.end[0], self.end[1]] = END_POSITION
 
         # 计算下一个位置
         move = directions[action]
         next_position = (self.cur[0] + move[0], self.cur[1] + move[1])
 
         # 初始化下一个状态、奖励和done标志
-        next_state = self.grid.copy()
-        reward = 0  # 默认奖励
+        next_state = copy.deepcopy(self.grid)
+        reward = -1  # 默认奖励
         done = False  # 默认未结束
 
         # 检查下一个位置是否在边界内
         if (0 <= next_position[0] < self.size) and (0 <= next_position[1] < self.size):
             # 检查下一个位置是否为障碍物
             if self.grid[next_position] == 0:
-                # 更新当前位置和深度
-                self.cur = np.array(next_position)
-                next_state = self.grid.copy()
+                # 有效移动，更新当前位置和深度
+                self.cur = next_position
                 self.depth += 1
 
                 # 检查是否到达终点
@@ -118,8 +122,9 @@ class Map:
         # 更新当前回合的奖励
         self.current_episode_reward += reward
 
-        next_state[self.cur[0]][self.cur[1]] = 5
-        next_state[self.end[0]][self.end[1]] = 6
+        next_state[self.cur[0]][self.cur[1]] = CURRENT_POSITION
+        next_state[self.end[0]][self.end[1]] = END_POSITION
+        
         return current_state, action, reward, next_state, done
 
     def reset(self):
@@ -137,8 +142,8 @@ class Map:
 
         # 创建初始状态的网格副本
         grid = self.grid.copy()
-        grid[self.cur[0]][self.cur[1]] = 5  # 标记起点
-        grid[self.end[0]][self.end[1]] = 6  # 标记终点
+        grid[self.cur[0]][self.cur[1]] = CURRENT_POSITION  # 标记起点
+        grid[self.end[0]][self.end[1]] = END_POSITION  # 标记终点
 
         return grid
 
@@ -152,19 +157,22 @@ class Map:
 
 
 if __name__ == '__main__':
-    env = Map(size=20, obstacle_ratio=0.3, seed=34)
+    env = Map(size=8, obstacle_ratio=0.1, seed=34)
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
-    print(env.cur)
 
     grid = env.get_grid()  # 获取网格数据
 
-    res = env.step(0)
-    # print(res[0])
-    # print(res[1])
-    # print(res[2])
-    # print(res[3])
-    # print(res[4])
+    print(env.get_total_depth())
 
-    print(env.reset())
+    res = env.step(0)
+    print(res[0])
+    print(res[1])
+    print(res[2])
+    print(res[3])
+    print(res[4])
+
+    print(env.get_total_depth())
+
+    
