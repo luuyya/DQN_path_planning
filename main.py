@@ -74,7 +74,7 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
 def grid_map_test(env, double_dqn, dueling_dqn):
     #todo: 调用test中的dqn_testing函数
     dqn_testing(
-        models_path=MODELS_PATH,
+        file_path=MODELS_PATH,
         env=env,
         dueling_dqn=dueling_dqn,
         double_dqn=double_dqn,
