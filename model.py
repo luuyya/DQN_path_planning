@@ -7,9 +7,9 @@ class DQN(nn.Module):
         super(DQN,self).__init__()
         self.conv1 = nn.Conv2d(in_channels=input_channel, out_channels=32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1, stride=1)
 
-        self.fc1 = nn.Linear(in_features=5184, out_features=512) # 修改输入时需要修改
+        self.fc1 = nn.Linear(in_features=64, out_features=512) # 修改输入时需要修改
         self.fc2 = nn.Linear(in_features=512, out_features=num_actions)
 
         self.relu = nn.ReLU()
