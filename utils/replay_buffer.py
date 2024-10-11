@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from env import Map
+from utils.env import Map
 
 class ReplayBuffer(object):
     """

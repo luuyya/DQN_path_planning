@@ -11,7 +11,7 @@ from utils.schedules import *
 from utils import plot
 
 BATCH_SIZE = 32
-REPLAY_BUFFER_SIZE = 1000000
+REPLAY_BUFFER_SIZE = 100000
 FRAME_HISTORY_LEN = 4 #每个状态输入包含最近的四帧信息
 TARGET_UPDATE_FREQ = 50
 GAMMA = 0.99 # 未来奖励折扣因子
