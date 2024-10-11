@@ -79,10 +79,10 @@ class ReplayBuffer(object):
     #     self.reward[idx] = reward
     #     self.done[idx] = done
 
-    # 假设有四个方向的动作，分别是：上、下、左、右
-ACTIONS = [0, 1, 2, 3]  # 0: 上, 1: 下, 2: 左, 3: 右
-
 def main():
+    # 假设有四个方向的动作，分别是：上、下、左、右
+    ACTIONS = [0, 1, 2, 3]  # 0: 上, 1: 下, 2: 左, 3: 右
+    
     # 初始化地图大小为10x10，障碍物比例为0.2
     size = 10
     obstacle_ratio = 0.2
