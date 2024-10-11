@@ -79,6 +79,7 @@ def dqn_learning(
                 x = torch.from_numpy(current_obs).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
                 Q_all_actions = Q(x).cpu() # 调用模型
                 action = ((Q_all_actions).data.max(1)[1])[0]
+
             else:
                 action = torch.IntTensor([[np.random.randint(nums_actions)]])[0][0]
             action = action.item()
