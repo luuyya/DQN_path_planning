@@ -79,20 +79,22 @@ def dqn_learning(
                 x = torch.from_numpy(current_obs).unsqueeze(0).type(dtype) # 感觉不用除 / 255.0
                 Q_all_actions = Q(x).cpu() # 调用模型
                 action = ((Q_all_actions).data.max(1)[1])[0]
-
             else:
                 action = torch.IntTensor([[np.random.randint(nums_actions)]])[0][0]
             action = action.item()
             # print(action)
+            if action not in actions_block:
+                action = np.random.choice(actions_block)
 
         action, reward, done, next_state = env.step(action)
         replay_buffer.store_frame(current_obs, action, reward, done, next_state) #存储信息
 
-        if done=='1':
+        if done==1:
             next_state = env.reset()
-
-        elif done=='2':
+        elif done==2:
             actions_block = actions_block - [action]
+        else:
+            actions_block = [0,1,2,3]
 
         current_obs = next_state
 
