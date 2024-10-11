@@ -92,7 +92,7 @@ def dqn_learning(
         if done==1:
             next_state = env.reset()
         elif done==2:
-            actions_block = actions_block - [action]
+            actions_block.remove(action)
         else:
             actions_block = [0,1,2,3]
 
@@ -135,7 +135,7 @@ def dqn_learning(
                 Q_n_a_index, a_index = Q_n_values.max(1)
 
                 # 将进入死状态的obs的Q_target设置为0
-                judgement=np.where(done_batch==0,1,0)
+                judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
                 Q_n_a_index = judgement * Q_n_a_index
 
                 error = rew_batch + gamma * Q_n_a_index - Q_c_a
@@ -175,6 +175,7 @@ def dqn_learning(
             torch.save(Q.state_dict(), model_save_path)
 
         # print(f"epoch {t}")
+        # print(env.get_total_depth())
 
         episode_rewards = env.get_episode_rewards()
         if len(episode_rewards) > 0:

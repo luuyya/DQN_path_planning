@@ -49,15 +49,3 @@ def plot_map(env, path=None):
     plt.title("Map with Path Visualization")
     plt.show()
 
-from env import Map
-
-def main():
-    env = Map(size=10, obstacle_ratio=0.1, seed=34)
-    env.create_random_map()
-    env.initialize_start_end()
-    print(f"Start: {env.start}, End: {env.end}")
-    path = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)]
-    plot_map(env, path)
-
-if __name__=='__main__':
-    main()

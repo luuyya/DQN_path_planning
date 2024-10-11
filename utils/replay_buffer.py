@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from env import Map
+from utils.env import Map
 
 class ReplayBuffer(object):
     """
@@ -80,10 +80,10 @@ class ReplayBuffer(object):
     #     self.reward[idx] = reward
     #     self.done[idx] = done
 
-    # 假设有四个方向的动作，分别是：上、下、左、右
-ACTIONS = [0, 1, 2, 3]  # 0: 上, 1: 下, 2: 左, 3: 右
-
 def main():
+    # 假设有四个方向的动作，分别是：上、下、左、右
+    ACTIONS = [0, 1, 2, 3]  # 0: 上, 1: 下, 2: 左, 3: 右
+    
     # 初始化地图大小为10x10，障碍物比例为0.2
     size = 10
     obstacle_ratio = 0.2
@@ -104,7 +104,7 @@ def main():
             action = random.choice(ACTIONS)  # 随机选择一个动作
             
             # 执行动作，假设move函数返回新的状态，奖励，结束标志和额外信息
-            next_state, reward, done, _ = env.step(action)
+            _, reward, done, next_state = env.step(action)
 
             # 存储当前经历到ReplayBuffer
             replay_buffer.store_frame(state, action, reward, done, next_state)

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import os
 from utils.env import Map
-from utils.plot import plot_path
+from utils.plot import plot_map
 from model import DQN,Dueling_DQN
 
 def get_newest_model(models_path):
@@ -57,7 +57,7 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
             break
 
     # 绘制地图并显示路径
-    plot_path(env, path)
+    plot_map(env, path)
 
     print("Path found by the agent:", path)
 
