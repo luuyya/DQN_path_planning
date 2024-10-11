@@ -44,8 +44,8 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
             action = torch.argmax(q_values).item()
 
         # 执行动作并更新当前位置
-        #todo:处理一下碰到障碍物的情况
-        _, _,_,_,done = env.step(action)
+        # todo:处理一下碰到障碍物的情况
+        _, _,done,_ = env.step(action)
         current_position=env.cur
         path.append(current_position)
 
