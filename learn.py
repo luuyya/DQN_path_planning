@@ -98,7 +98,7 @@ def dqn_learning(
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)):# 模型训练
 
             # obs_t, act_t, rew_t, obs_tp1, done_mask = replay_buffer.sample(batch_size)
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(batch_size)
+            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample_batch(batch_size)
             obs_batch = torch.from_numpy(obs_batch).type(dtype)
             act_batch = torch.from_numpy(act_batch).type(dlongtype)
             rew_batch = torch.from_numpy(rew_batch).type(dtype)

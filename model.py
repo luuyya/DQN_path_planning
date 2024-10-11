@@ -18,13 +18,15 @@ class DQN(nn.Module):
 
     def forward(self, x):
         batch_size = x.size(0)
+        # print(x.shape)
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.relu(self.conv3(x))
         x = x.view(batch_size, -1)
-        # print(x.shape)
+        
         x = self.relu(self.fc1(x))
         x = self.fc2(x)
+        # print(x.shape)
         return x
 
 
@@ -70,7 +72,7 @@ class Dueling_DQN(nn.Module):
 if __name__=='__main__':
     from utils.env import Map
 
-    env = Map(size=50, obstacle_ratio=0.3, seed=34)
+    env = Map(size=100, obstacle_ratio=0.3, seed=34)
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")

@@ -1,6 +1,8 @@
 import numpy as np
 import random
 
+from env import Map
+
 class ReplayBuffer(object):
     """
     缓冲区，存放状态动作空间，一个循环队列
@@ -57,11 +59,11 @@ class ReplayBuffer(object):
 
     def store_frame(self, cur, a, r, d, next):
         if self.cur_obs is None:
-            self.cur_obs = np.empty([self.size]+cur.shape, dtype=np.int32)
+            self.cur_obs = np.empty([self.size]+list(cur.shape), dtype=np.int32)
             self.action = np.empty([self.size], dtype=np.int32)
             self.reward = np.empty([self.size], dtype=np.float32)
             self.done = np.empty([self.size], dtype=np.int32)
-            self.next_obs=np.empty([self.size]+cur.shape, dtype=np.int32)
+            self.next_obs=np.empty([self.size]+list(cur.shape), dtype=np.int32)
 
         self.cur_obs[self.next_idx] = cur
         self.action[self.next_idx] = a
@@ -77,69 +79,56 @@ class ReplayBuffer(object):
     #     self.reward[idx] = reward
     #     self.done[idx] = done
 
+    # 假设有四个方向的动作，分别是：上、下、左、右
+ACTIONS = [0, 1, 2, 3]  # 0: 上, 1: 下, 2: 左, 3: 右
 
-if __name__ == '__main__':
-    # 创建一个大小为100的ReplayBuffer
-    replay_buffer = ReplayBuffer(100)
+def main():
+    # 初始化地图大小为10x10，障碍物比例为0.2
+    size = 10
+    obstacle_ratio = 0.2
+    env = Map(size=size, obstacle_ratio=obstacle_ratio)
+    env.create_random_map()
+    env.initialize_start_end()  # 初始化起点和终点
 
-    # 定义网格地图大小
-    grid_size = (5, 5)
+    # 初始化ReplayBuffer，大小为100
+    buffer_size = 100
+    replay_buffer = ReplayBuffer(size=buffer_size)
 
-    # 定义初始位置
-    agent_position = [0, 0]
+    # 模拟10次路径规划
+    for episode in range(10):
+        env.reset()  # 重置环境
+        state = env.get_current_state()  # 获取当前状态，假设有cur_state函数返回坐标
+        
+        for t in range(20):  # 每个episode最多20步
+            action = random.choice(ACTIONS)  # 随机选择一个动作
+            
+            # 执行动作，假设move函数返回新的状态，奖励，结束标志和额外信息
+            next_state, reward, done, _ = env.step(action)
 
-    # 定义动作空间：0-上，1-下，2-左，3-右
-    action_space = [0, 1, 2, 3]
+            # 存储当前经历到ReplayBuffer
+            replay_buffer.store_frame(state, action, reward, done, next_state)
 
-    # 定义目标位置
-    goal_position = [4, 4]
+            # 更新状态
+            state = next_state
+            
+            # 如果到达终点或发生碰撞，结束当前episode
+            if done == 1 or done == 2:
+                print(f"Episode {episode} ends at step {t} with done flag {done}.")
+                break
 
-    # 运行一定的步骤来模拟路径规划
-    for _ in range(200):
-        # 存储当前状态（位置）
-        state = np.array(agent_position)
-        idx = replay_buffer.store_frame(state)
-
-        # 随机选择一个动作
-        action = random.choice(action_space)
-
-        # 根据动作更新位置
-        next_position = agent_position.copy()
-        if action == 0 and agent_position[0] > 0:
-            next_position[0] -= 1  # 上
-        elif action == 1 and agent_position[0] < grid_size[0] - 1:
-            next_position[0] += 1  # 下
-        elif action == 2 and agent_position[1] > 0:
-            next_position[1] -= 1  # 左
-        elif action == 3 and agent_position[1] < grid_size[1] - 1:
-            next_position[1] += 1  # 右
-        # 如果动作导致出界，位置保持不变
-
-        # 定义奖励：到达目标位置奖励1，否则为-0.1
-        if next_position == goal_position:
-            reward = 1.0
-            done = True
-        else:
-            reward = -0.1
-            done = False
-
-        # 存储效果
-        replay_buffer.store_effect(idx, action, reward, done)
-
-        # 更新位置
-        agent_position = next_position
-
-        # 如果到达目标位置，重置位置
-        if done:
-            agent_position = [0, 0]
-
-    # 检查是否可以采样
-    if replay_buffer.can_sample(5):
-        obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(5)
-        print("obs_batch:", obs_batch)
-        print("act_batch:", act_batch)
-        print("rew_batch:", rew_batch)
-        print("next_obs_batch:", next_obs_batch)
-        print("done_mask:", done_mask)
+    # 从缓冲区中采样
+    batch_size = 5
+    if replay_buffer.can_sample(batch_size):
+        cur_obs_batch, action_batch, reward_batch, next_obs_batch, done_batch = replay_buffer.sample_batch(batch_size)
+        
+        print("Sampled a batch from ReplayBuffer:")
+        print("Current observations:", cur_obs_batch)
+        print("Actions:", action_batch)
+        print("Rewards:", reward_batch)
+        print("Next observations:", next_obs_batch)
+        print("Done flags:", done_batch)
     else:
-        print("无法采样，缓冲区中的数据不足。")
+        print("Not enough data in the buffer to sample a batch.")
+
+if __name__ == "__main__":
+    main()
