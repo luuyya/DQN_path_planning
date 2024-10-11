@@ -109,7 +109,7 @@ def dqn_learning(
             done_batch = torch.from_numpy(done_batch).type(dtype)
 
             Q_values = Q(cur_obs_batch.unsqueeze(1))
-            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1))#选取指定action的q值
+            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1)) #选取指定action的q值
 
             Q_c_a = Q_c_a.squeeze()
 
@@ -131,8 +131,8 @@ def dqn_learning(
             else:
                 # regular DQN
                 # todo:考虑是否要更改为针对Q的操作
-                Q_target_n_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
-                Q_n_a_index, a_index = Q_target_n_values.max(1)
+                Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
+                Q_n_a_index, a_index = Q_n_values.max(1)
 
                 # 将进入死状态的obs的Q_target设置为0
                 judgement=np.where(done_batch==0,1,0)
@@ -149,7 +149,7 @@ def dqn_learning(
             num_param_updates += 1
 
             # 更新参数
-            if num_param_updates % target_update_freq == 0:
+            if double_dqn and num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
 
             # (2) Log values and gradients of the parameters (histogram)

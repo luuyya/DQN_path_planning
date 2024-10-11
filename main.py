@@ -13,7 +13,7 @@ from utils import plot
 BATCH_SIZE = 32
 REPLAY_BUFFER_SIZE = 1000000
 FRAME_HISTORY_LEN = 4 #每个状态输入包含最近的四帧信息
-TARGET_UPDATE_FREQ = 10000
+TARGET_UPDATE_FREQ = 50
 GAMMA = 0.99 # 未来奖励折扣因子
 LEARNING_FREQ = 4 #四个环境交互步骤（例如，每执行四次动作），模型才会更新一次
 LEARNING_RATE = 0.00025
