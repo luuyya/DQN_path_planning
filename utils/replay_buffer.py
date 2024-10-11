@@ -120,6 +120,7 @@ def main():
     batch_size = 5
     if replay_buffer.can_sample(batch_size):
         cur_obs_batch, action_batch, reward_batch, next_obs_batch, done_batch = replay_buffer.sample_batch(batch_size)
+        print(type(done_batch))
         
         print("Sampled a batch from ReplayBuffer:")
         print("Current observations:", cur_obs_batch)
