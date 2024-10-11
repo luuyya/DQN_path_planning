@@ -152,7 +152,7 @@ def dqn_learning(
             if double_dqn and num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
 
-            # (2) Log values and gradients of the parameters (histogram)
+            # todo:需要进行一定的修改完善
             if t % LOG_EVERY_N_STEPS == 0:
                 for tag, value in Q.named_parameters():
                     tag = tag.replace('.', '/')

@@ -5,8 +5,6 @@ CURRENT_POSITION = 2
 END_POSITION = 3
 
 class Map:
-    
-
     def __init__(self, size=8, obstacle_ratio=0.1, seed=None):
         """
         初始化 Map 类
