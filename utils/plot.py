@@ -52,9 +52,9 @@ def plot_map(env, path=None):
     plt.show()
 
 
-if __name__ == '__main__':
-    env = Map(size=20, obstacle_ratio=0.1, seed=40)
-    env.create_random_map()
-    env.initialize_start_end()
-    print(f"Start: {env.start}, End: {env.end}")
-    plot_map(env)
+# if __name__ == '__main__':
+#     env = Map(size=20, obstacle_ratio=0.1, seed=40)
+#     env.create_random_map()
+#     env.initialize_start_end()
+#     print(f"Start: {env.start}, End: {env.end}")
+#     plot_map(env)
