@@ -59,6 +59,7 @@ def dqn_learning(
     best_mean_episode_reward = -float('inf')
     current_obs = env.reset()
 
+
     actions_block=[0,1,2,3]
 
     for t in itertools.count():
