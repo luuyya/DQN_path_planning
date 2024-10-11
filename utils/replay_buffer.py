@@ -103,7 +103,7 @@ def main():
             action = random.choice(ACTIONS)  # 随机选择一个动作
             
             # 执行动作，假设move函数返回新的状态，奖励，结束标志和额外信息
-            next_state, reward, done, _ = env.step(action)
+            _, reward, done, next_state = env.step(action)
 
             # 存储当前经历到ReplayBuffer
             replay_buffer.store_frame(state, action, reward, done, next_state)
