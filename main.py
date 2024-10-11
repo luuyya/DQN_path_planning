@@ -10,7 +10,11 @@ from utils.env import Map
 from utils.schedules import *
 from utils import plot
 
-BATCH_SIZE = 32
+MAP_SIZE=20
+OBSTACLE_RATIO=0.5
+NUM_TIMESTPES=10000
+
+BATCH_SIZE = 1000
 REPLAY_BUFFER_SIZE = 100000
 FRAME_HISTORY_LEN = 4 #每个状态输入包含最近的四帧信息
 TARGET_UPDATE_FREQ = 50
@@ -26,7 +30,7 @@ INPUT_CHANNELS=1 #输入通道数
 NUMS_ACTIONS=4 #动作数
 MODELS_PATH='./models'
 
-def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
+def grid_map_learn(env, double_dqn, dueling_dqn):
 
     #todo:
     optimizer = OptimizerSpec(
@@ -40,7 +44,7 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=Dueling_DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_num=num_timesteps,
+            stopping_num=NUM_TIMESTPES,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
@@ -58,7 +62,7 @@ def grid_map_learn(env, num_timesteps, double_dqn, dueling_dqn):
             q_func=DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_num=num_timesteps,
+            stopping_num=NUM_TIMESTPES,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
@@ -89,11 +93,11 @@ def main():
     #train
     #各种参数设置
     train_parser = subparsers.add_parser("train", help="Train an RL agent for grid map path planning")
-    train_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
-    train_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
+    # train_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
+    # train_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
     train_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
-    train_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
+    # train_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
     train_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
     train_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
@@ -101,8 +105,8 @@ def main():
     #todo:test
     #各种参数设置
     test_parser = subparsers.add_parser("test", help="Test an RL agent for grid map path planning")
-    test_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
-    test_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
+    # test_parser.add_argument("--map-size", type=int, default=100, help="Size of the grid map")
+    # test_parser.add_argument("--obstacle-ratio", type=float, default=0.1, help="Ratio of obstacles in the grid map")
     test_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
     # test_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
@@ -119,7 +123,7 @@ def main():
             print(f"CUDA Device: {torch.cuda.current_device()}")
 
     # Create the grid map environment
-    env = Map(size=args.map_size, obstacle_ratio=args.obstacle_ratio, seed=args.seed)
+    env = Map(size=MAP_SIZE, obstacle_ratio=OBSTACLE_RATIO, seed=args.seed)
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
@@ -132,14 +136,13 @@ def main():
 
     if is_train:
         # Run training
-        print(f"Training with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_learn(env, num_timesteps=args.num_timesteps, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        print(f"Training with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
+        grid_map_learn(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
 
     else:
         # Run Test
-        print(f"Testing with map size {args.map_size}, obstacle ratio {args.obstacle_ratio}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
+        print(f"Testing with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
         grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
-        pass
 
 if __name__ == '__main__':
     main()
