@@ -109,7 +109,7 @@ def dqn_learning(
             done_batch = torch.from_numpy(done_batch).type(dtype)
 
             Q_values = Q(cur_obs_batch.unsqueeze(1))
-            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1))#选取指定action的q值
+            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1)) #选取指定action的q值
 
             Q_c_a = Q_c_a.squeeze()
 
@@ -123,36 +123,33 @@ def dqn_learning(
                 Q_target_a_index = Q_target_n_values.gather(1, a_index.unsqueeze(1))
                 Q_target_a_index = Q_target_a_index.squeeze()
 
-                # todo:将进入死状态的obs的Q_target设置为0
-                Q_target_a_index = (2 - done_batch) * Q_target_a_index
+                # 将进入死状态的obs的Q_target设置为0
+                judgement=np.where(done_batch==0,1,0)
+                Q_target_a_index = judgement * Q_target_a_index
 
                 error = rew_batch + gamma * Q_target_a_index - Q_c_a
             else:
                 # regular DQN
-                Q_target_n_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
-                Q_n_a_index, a_index = Q_target_n_values.max(1)
+                # todo:考虑是否要更改为针对Q的操作
+                Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
+                Q_n_a_index, a_index = Q_n_values.max(1)
 
-                # todo:将进入死状态的obs的Q_target设置为0
-                Q_n_a_index = (1 - done_batch) * Q_n_a_index
+                # 将进入死状态的obs的Q_target设置为0
+                judgement=np.where(done_batch==0,1,0)
+                Q_n_a_index = judgement * Q_n_a_index
 
-                # r + gamma * Q(s',a', theta_i_frozen) - Q(s, a, theta_i)
-                error = rew_batch + gamma * Q_n_a_index - q_s_a
+                error = rew_batch + gamma * Q_n_a_index - Q_c_a
 
-            # clip the error and flip 
+            # 限制误差区间
             clipped_error = -1.0 * error.clamp(-1, 1)
 
-            # backwards pass
             optimizer.zero_grad()
-
-            # print(clipped_error.data.shape)
-            q_s_a.backward(clipped_error.data)
-
-            # update
+            Q_c_a.backward(clipped_error.data)
             optimizer.step()
             num_param_updates += 1
 
             # 更新参数
-            if num_param_updates % target_update_freq == 0:
+            if double_dqn and num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
 
             # (2) Log values and gradients of the parameters (histogram)
