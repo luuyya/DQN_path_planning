@@ -124,8 +124,7 @@ def main():
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
 
-    # grid = env.get_grid()  # 获取网格数据
-    # plot.plot_map(grid, env.start, env.end)  # 将网格数据传递给绘图函数      
+    plot.plot_map(env)     
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)

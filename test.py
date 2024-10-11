@@ -41,6 +41,7 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
         # 获取动作（模型的输出）
         with torch.no_grad():
             q_values = model(state_tensor)
+            print(q_values)
             action = torch.argmax(q_values).item()
 
         # 执行动作并更新当前位置

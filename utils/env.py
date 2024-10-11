@@ -111,7 +111,7 @@ class Map:
 
                 # 检查是否到达终点
                 if np.array_equal(self.cur, self.end):
-                    reward = 10  # 到达终点的奖励
+                    reward = 100  # 到达终点的奖励
                     done = 1
             else:
                 reward = -10  # 碰到障碍物的惩罚
