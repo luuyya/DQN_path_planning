@@ -83,57 +83,60 @@ def dqn_learning(
                 action = torch.IntTensor([[np.random.randint(nums_actions)]])[0][0]
             action = action.item()
             # print(action)
+            if action not in actions_block:
+                action = np.random.choice(actions_block)
 
         action, reward, done, next_state = env.step(action)
         replay_buffer.store_frame(current_obs, action, reward, done, next_state) #存储信息
 
-        if done=='1':
+        if done==1:
             next_state = env.reset()
-
-        elif done=='2':
+        elif done==2:
             actions_block = actions_block - [action]
+        else:
+            actions_block = [0,1,2,3]
 
         current_obs = next_state
 
-        if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)):# 模型训练
+        if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)): # 模型训练
 
-            # obs_t, act_t, rew_t, obs_tp1, done_mask = replay_buffer.sample(batch_size)
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample_batch(batch_size)
-            obs_batch = torch.from_numpy(obs_batch).type(dtype)
+            cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer.sample_batch(batch_size)
+            #修改各个变量的类型
+            cur_obs_batch = torch.from_numpy(cur_obs_batch).type(dtype)
             act_batch = torch.from_numpy(act_batch).type(dlongtype)
             rew_batch = torch.from_numpy(rew_batch).type(dtype)
             next_obs_batch = torch.from_numpy(next_obs_batch).type(dtype)
-            done_mask = torch.from_numpy(done_mask).type(dtype)
+            done_batch = torch.from_numpy(done_batch).type(dtype)
 
-            # input batches to networks
-            # get the Q values for current observations (Q(s,a, theta_i))
-            # print(obs_batch.unsqueeze(0).shape)
-            q_values = Q(obs_batch.unsqueeze(1))
-            
-            q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
-            q_s_a = q_s_a.squeeze()
+            Q_values = Q(cur_obs_batch.unsqueeze(1))
+            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1))#选取指定action的q值
+
+            Q_c_a = Q_c_a.squeeze()
 
             if (double_dqn):
                 # Double dqn
-                q_tp1_values = Q(next_obs_batch.unsqueeze(1)).detach()
-                _, a_prime = q_tp1_values.max(1)
+                Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
+                _, a_index = Q_n_values.max(1)
 
-                q_target_tp1_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
-                q_target_s_a_prime = q_target_tp1_values.gather(1, a_prime.unsqueeze(1))
-                q_target_s_a_prime = q_target_s_a_prime.squeeze()
+                # 选取Q_target中在Q中最大的的动作
+                Q_target_n_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
+                Q_target_a_index = Q_target_n_values.gather(1, a_index.unsqueeze(1))
+                Q_target_a_index = Q_target_a_index.squeeze()
 
-                # if current state is end of episode, then there is no next Q value
-                q_target_s_a_prime = (1 - done_mask) * q_target_s_a_prime 
+                # todo:将进入死状态的obs的Q_target设置为0
+                Q_target_a_index = (2 - done_batch) * Q_target_a_index
 
-                error = rew_batch + gamma * q_target_s_a_prime - q_s_a
+                error = rew_batch + gamma * Q_target_a_index - Q_c_a
             else:
                 # regular DQN
-                q_tp1_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
-                q_s_a_prime, a_prime = q_tp1_values.max(1)
-                q_s_a_prime = (1 - done_mask) * q_s_a_prime 
+                Q_target_n_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
+                Q_n_a_index, a_index = Q_target_n_values.max(1)
+
+                # todo:将进入死状态的obs的Q_target设置为0
+                Q_n_a_index = (1 - done_batch) * Q_n_a_index
 
                 # r + gamma * Q(s',a', theta_i_frozen) - Q(s, a, theta_i)
-                error = rew_batch + gamma * q_s_a_prime - q_s_a
+                error = rew_batch + gamma * Q_n_a_index - q_s_a
 
             # clip the error and flip 
             clipped_error = -1.0 * error.clamp(-1, 1)
