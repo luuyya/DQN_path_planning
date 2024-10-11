@@ -7,6 +7,9 @@ from model import DQN,Dueling_DQN
 
 def get_newest_model(models_path):
     file_names = os.listdir(models_path)
+    if file_names==None:
+        raise ValueError("未能找到模型")
+
     model_path = models_path+"/"+file_names[-1]
     return model_path
 
