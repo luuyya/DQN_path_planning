@@ -100,20 +100,17 @@ def dqn_learning(
 
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)):# 模型训练
 
-            # obs_t, act_t, rew_t, obs_tp1, done_mask = replay_buffer.sample(batch_size)
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(batch_size)
+            obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer.sample_batch(batch_size)
+            #修改各个变量的类型
             obs_batch = torch.from_numpy(obs_batch).type(dtype)
             act_batch = torch.from_numpy(act_batch).type(dlongtype)
             rew_batch = torch.from_numpy(rew_batch).type(dtype)
             next_obs_batch = torch.from_numpy(next_obs_batch).type(dtype)
-            done_mask = torch.from_numpy(done_mask).type(dtype)
+            done_batch = torch.from_numpy(done_batch).type(dtype)
 
-            # input batches to networks
-            # get the Q values for current observations (Q(s,a, theta_i))
-            # print(obs_batch.unsqueeze(0).shape)
-            q_values = Q(obs_batch.unsqueeze(1))
+            Q_values = Q(obs_batch.unsqueeze(1))
             
-            q_s_a = q_values.gather(1, act_batch.unsqueeze(1))
+            q_s_a = Q_values.gather(1, act_batch.unsqueeze(1))
             q_s_a = q_s_a.squeeze()
 
             if (double_dqn):
@@ -126,14 +123,14 @@ def dqn_learning(
                 q_target_s_a_prime = q_target_s_a_prime.squeeze()
 
                 # if current state is end of episode, then there is no next Q value
-                q_target_s_a_prime = (1 - done_mask) * q_target_s_a_prime 
+                q_target_s_a_prime = (1 - done_batch) * q_target_s_a_prime
 
                 error = rew_batch + gamma * q_target_s_a_prime - q_s_a
             else:
                 # regular DQN
                 q_tp1_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
                 q_s_a_prime, a_prime = q_tp1_values.max(1)
-                q_s_a_prime = (1 - done_mask) * q_s_a_prime 
+                q_s_a_prime = (1 - done_batch) * q_s_a_prime
 
                 # r + gamma * Q(s',a', theta_i_frozen) - Q(s, a, theta_i)
                 error = rew_batch + gamma * q_s_a_prime - q_s_a
