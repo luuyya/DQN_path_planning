@@ -11,7 +11,7 @@ from utils.schedules import *
 from utils import plot
 
 MAP_SIZE=20
-OBSTACLE_RATIO=0.5
+OBSTACLE_RATIO=0.1
 NUM_TIMESTPES=10000
 
 BATCH_SIZE = 1000

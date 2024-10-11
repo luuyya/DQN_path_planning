@@ -18,6 +18,9 @@ USE_CUDA = torch.cuda.is_available()
 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
 
+LOG_EVERY_N_STEPS = 1000
+SAVE_MODEL_EVERY_N_STEPS = 5000
+
 # 设置 Logger
 logger = Logger('./logs')
 def to_np(x):
@@ -55,8 +58,6 @@ def dqn_learning(
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
     current_obs = env.reset()
-    LOG_EVERY_N_STEPS = 1000
-    SAVE_MODEL_EVERY_N_STEPS = 1000
 
     actions_block=[0,1,2,3]
 

@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
+# from env import Map
 
 def plot_map(env, path=None):
     """
     绘制地图，显示起点、终点、障碍物、空白区域，并可选地显示路径（蓝色方格）。
-    :param grid: 生成的地图
-    :param start: 起点坐标
-    :param end: 终点坐标
+    :param env: 环境对象，包含地图、起点和终点信息
     :param path: 路径列表，包含路径上的坐标（可选）
     """
     grid = env.get_grid()
@@ -42,6 +41,9 @@ def plot_map(env, path=None):
     plt.xticks(np.arange(0, size + 1, 1))
     plt.yticks(np.arange(0, size + 1, 1))
 
+    # 调整 y 轴的方向，使其从上到下递增
+    plt.gca().invert_yaxis()
+
     # 添加起点和终点标注
     plt.text(start[1] + 0.5, start[0] + 0.5, 'Start', ha='center', va='center', color='black')
     plt.text(end[1] + 0.5, end[0] + 0.5, 'End', ha='center', va='center', color='black')
@@ -49,3 +51,10 @@ def plot_map(env, path=None):
     plt.title("Map with Path Visualization")
     plt.show()
 
+
+if __name__ == '__main__':
+    env = Map(size=20, obstacle_ratio=0.1, seed=40)
+    env.create_random_map()
+    env.initialize_start_end()
+    print(f"Start: {env.start}, End: {env.end}")
+    plot_map(env)
