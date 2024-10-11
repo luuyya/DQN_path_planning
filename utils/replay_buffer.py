@@ -40,7 +40,8 @@ class ReplayBuffer(object):
 
     def sample_batch(self, batch_size):
         #在buffer中进行采样，得到batch_size大小的数据
-        assert self.can_sample(batch_size), "buffer未存储到足够的数据"
+        if self.can_sample(batch_size):
+            raise ValueError("buffer未存储到足够的数据")
 
         indices=list(range(self.num_in_buffer))
         indexes=random.sample(indices,batch_size)
