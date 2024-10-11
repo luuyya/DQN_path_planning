@@ -66,6 +66,7 @@ def dqn_learning(
         if env.get_total_depth() > stopping_num:
             break
 
+
         # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
         # observations = replay_buffer.encode_recent_observation() # 得到前一个状态
 
