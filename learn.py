@@ -57,16 +57,14 @@ def dqn_learning(
     num_param_updates = 0
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
-    current_obs = env.reset()
-
+    # current_obs = env.restart()
 
     actions_block=[0,1,2,3]
 
     for t in itertools.count():
-        # todo:停止迭代条件
+        # todo:当有一定的到达次数后，进行地图的reset
         if env.get_total_depth() > stopping_num:
             break
-
 
         # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
         # observations = replay_buffer.encode_recent_observation() # 得到前一个状态
@@ -93,7 +91,7 @@ def dqn_learning(
         replay_buffer.store_frame(current_obs, action, reward, done, next_state) #存储信息
 
         if done==1:
-            next_state = env.reset()
+            next_state = env.restart()
         elif done==2:
             actions_block.remove(action)
         else:
