@@ -7,11 +7,19 @@ from model import DQN,Dueling_DQN
 
 def get_newest_model(models_path):
     file_names = os.listdir(models_path)
-    if file_names==None:
+    
+    # 检查文件列表是否为空
+    if not file_names:
         raise ValueError("未能找到模型")
 
-    model_path = models_path+"/"+file_names[-1]
-    return model_path
+    # 获取所有文件的完整路径
+    full_paths = [os.path.join(models_path, f) for f in file_names]
+    
+    # 按最后修改时间排序，最新的文件在最后
+    full_paths.sort(key=os.path.getmtime)
+    
+    # 返回最新的模型路径
+    return full_paths[-1]
 
 def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_actions):
     # 检查模型路径是否存在

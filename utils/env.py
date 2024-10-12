@@ -1,6 +1,8 @@
 import copy
 import numpy as np
 
+from plot import plot_map
+
 CURRENT_POSITION = 2
 END_POSITION = 3
 
@@ -159,7 +161,7 @@ class Map:
         self.initialize_start_end()  # 重新设置起点和终点
         self.cur = self.start.copy()  # 重置当前位置为起点
         self.depth = 0  # 重置深度
-        self.arrive_nums = 0  # 重置到达次数
+        self.arrive_nums = 0  
 
         # 将当前回合的奖励记录到回合奖励列表中
         if self.current_episode_reward != 0:
@@ -192,7 +194,8 @@ class Map:
         return self.arrive_nums
 
 if __name__ == '__main__':
-    env = Map(size=8, obstacle_ratio=0.1, seed=34)
+    env = Map(size=20, obstacle_ratio=0.1, seed=34)
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
+    plot_map(env)

@@ -204,8 +204,8 @@ def dqn_learning(
                 add_str = 'regular'
             if Q.name != 'DQN':
                 add_str += '_dueling'
-            timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-            model_save_path = f"models/{add_str}_{t}_{timestamp}.model"
+            # timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+            model_save_path = f"models/{add_str}_{map_nums}_{t}_{seed}.model"
             torch.save(Q.state_dict(), model_save_path)
 
         episode_rewards = env.get_episode_rewards()
