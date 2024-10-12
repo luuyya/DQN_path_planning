@@ -128,7 +128,8 @@ class Map:
         
         return action, reward, done, next_state
 
-    def reset(self):
+    def restart(self):
+        #todo: 修改为restart，只进行起终点的重设
         """
         重置环境，返回初始状态
         :return: 初始状态的网格
@@ -146,6 +147,10 @@ class Map:
         grid[self.cur[0]][self.cur[1]] = CURRENT_POSITION  # 标记起点
         grid[self.end[0]][self.end[1]] = END_POSITION  # 标记终点
 
+        return grid
+
+    def reset(self):
+        #todo: 进行全地图的重设
         return grid
 
     def get_episode_rewards(self):

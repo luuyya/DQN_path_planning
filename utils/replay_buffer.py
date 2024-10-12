@@ -97,7 +97,7 @@ def main():
 
     # 模拟10次路径规划
     for episode in range(10):
-        env.reset()  # 重置环境
+        env.restart()  # 重置环境
         state = env.get_current_state()  # 获取当前状态，假设有cur_state函数返回坐标
         
         for t in range(20):  # 每个episode最多20步
