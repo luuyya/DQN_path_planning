@@ -67,6 +67,7 @@ def dqn_learning(
     current_obs = env.restart()
     map_nums=0
     restart_nums=0
+    invalid_map_nums=0
 
     actions_block=[0,1,2,3]
 
@@ -80,7 +81,9 @@ def dqn_learning(
             break
 
         # 当有一定的到达次数后，进行地图的reset
-        if env.get_arrive_nums() > reset_num:
+        if len(actions_block)==0 or env.get_arrive_nums() > reset_num:
+            if len(actions_block)==0:
+                invalid_map_nums+=0
             map_nums+=1
             restart_nums=0
             env.reset()
@@ -222,6 +225,7 @@ def dqn_learning(
                 print("best mean reward -")
             # print(f"episodes {len(episode_rewards)}")
             print(f"map_nums {map_nums}")
+            print(f"invalid_map_nums {invalid_map_nums}")
             print(f"restart_nums {restart_nums}")
             print(f"arrive_nums {env.get_arrive_nums()}")
             print(f"exploration {exploration.value(t):.6f}")
