@@ -47,7 +47,10 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
         path = [current_position]
 
         # 模拟模型对路径的预测
-        while not(current_position[0] == end[0] and current_position[1]==end[1]):
+        while True:
+            if current_position[0] == end[0] and current_position[1]==end[1]:
+                succee_count+=1
+                break
             # 将当前状态转换为模型输入
             state=np.array(env.get_current_state(),dtype=np.float32)
             state_tensor = torch.from_numpy(state).unsqueeze(0)
@@ -55,7 +58,7 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
             # 获取动作（模型的输出）
             with torch.no_grad():
                 q_values = model(state_tensor)
-                print(q_values)
+                # print(q_values)
                 action = torch.argmax(q_values).item()
 
             # 执行动作并更新当前位置
@@ -71,10 +74,8 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
                 print("The agent seems to be stuck in a loop.")
                 break
 
-            succee_count+=1
-
         # 绘制地图并显示路径
-        plot_map(env, path)
+        # plot_map(env, path)
         print("Path found by the agent:", path)
 
         env.reset()

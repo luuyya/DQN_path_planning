@@ -1,8 +1,6 @@
 import copy
 import numpy as np
 
-from plot import plot_map
-
 CURRENT_POSITION = 2
 END_POSITION = 3
 
@@ -198,4 +196,3 @@ if __name__ == '__main__':
     env.create_random_map()
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
-    plot_map(env)
