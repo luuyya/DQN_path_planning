@@ -20,6 +20,7 @@ dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTe
 
 LOG_EVERY_N_STEPS = 1000
 SAVE_MODEL_EVERY_N_STEPS = 5000
+STOP_CONDITION = 500
 
 # 设置 Logger
 logger = Logger('./logs')
@@ -58,12 +59,18 @@ def dqn_learning(
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
     current_obs = env.restart()
+    map_nums=1
 
     actions_block=[0,1,2,3]
 
     for t in itertools.count():
-        # todo:当有一定的到达次数后，进行地图的reset
+        # 迭代停止条件
+        if map_nums>STOP_CONDITION:
+            break
+
+        # 当有一定的到达次数后，进行地图的reset
         if env.get_arrive_nums() > reset_num:
+            map_nums+=1
             env.reset()
 
         # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
@@ -131,7 +138,6 @@ def dqn_learning(
                 error = rew_batch + gamma * Q_target_a_index - Q_c_a
             else:
                 # regular DQN
-                # todo:考虑是否要更改为针对Q的操作
                 Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
                 Q_n_a_index, a_index = Q_n_values.max(1)
 
