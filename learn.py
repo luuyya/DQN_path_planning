@@ -33,6 +33,7 @@ def dqn_learning(
           optimizer_spec,
           exploration,
           reset_num,
+          restart_depth,
           replay_buffer_size,
           batch_size,
           gamma,
@@ -106,6 +107,10 @@ def dqn_learning(
             actions_block.remove(action)
         else:
             actions_block = [0,1,2,3]
+
+        if env.get_total_depth() > restart_depth:
+            next_state = env.restart()
+            restart_nums += 1
 
         current_obs = next_state
 
