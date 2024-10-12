@@ -21,7 +21,7 @@ def get_newest_model(models_path):
     # 返回最新的模型路径
     return full_paths[-1]
 
-def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_actions):
+def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_actions,test_size):
     # 检查模型路径是否存在
     assert os.path.exists(file_path), "Model file not found: {model_path}"
 
@@ -36,42 +36,50 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
     model.load_state_dict(state_dict)
     model.eval()  # 切换到评估模式
 
-    # 获取起点和终点
-    start, end = env.start, env.end
-    current_position = start
+    succee_count = 0
 
-    # 保存路径
-    path = [current_position]
+    for i in range(test_size):
+        # 获取起点和终点
+        start, end = env.start, env.end
+        current_position = start
 
-    # 模拟模型对路径的预测
-    while not(current_position[0] == end[0] and current_position[1]==end[1]):
-        # 将当前状态转换为模型输入
-        state=np.array(env.get_current_state(),dtype=np.float32)
-        state_tensor = torch.from_numpy(state).unsqueeze(0)
+        # 保存路径
+        path = [current_position]
 
-        # 获取动作（模型的输出）
-        with torch.no_grad():
-            q_values = model(state_tensor)
-            print(q_values)
-            action = torch.argmax(q_values).item()
+        # 模拟模型对路径的预测
+        while not(current_position[0] == end[0] and current_position[1]==end[1]):
+            # 将当前状态转换为模型输入
+            state=np.array(env.get_current_state(),dtype=np.float32)
+            state_tensor = torch.from_numpy(state).unsqueeze(0)
 
-        # 执行动作并更新当前位置
-        # todo:处理一下碰到障碍物的情况
-        _, _,done,_ = env.step(action)
-        current_position=env.cur
-        path.append(current_position)
+            # 获取动作（模型的输出）
+            with torch.no_grad():
+                q_values = model(state_tensor)
+                print(q_values)
+                action = torch.argmax(q_values).item()
 
-        print(current_position)
+            # 执行动作并更新当前位置
+            # todo:处理一下碰到障碍物的情况
+            _, _,done,_ = env.step(action)
+            current_position=env.cur
+            path.append(current_position)
 
-        # 检查是否陷入死循环（例如遇到障碍物无法前进）
-        if len(path) > env.size*env.size:
-            print("The agent seems to be stuck in a loop.")
-            break
+            print(current_position)
 
-    # 绘制地图并显示路径
-    plot_map(env, path)
+            # 检查是否陷入死循环（例如遇到障碍物无法前进）
+            if len(path) > env.size*env.size:
+                print("The agent seems to be stuck in a loop.")
+                break
 
-    print("Path found by the agent:", path)
+            succee_count+=1
+
+        # 绘制地图并显示路径
+        plot_map(env, path)
+        print("Path found by the agent:", path)
+
+        env.reset()
+
+    print(f"successful ratio:{succee_count/test_size}")
 
 # 示例调用
 if __name__ == "__main__":
@@ -81,4 +89,4 @@ if __name__ == "__main__":
     env.create_random_map()
     env.initialize_start_end()
 
-    dqn_testing(folder_path, env, False,False,1,4)
+    dqn_testing(folder_path, env, False,False,1,4,100)

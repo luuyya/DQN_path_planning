@@ -29,6 +29,7 @@ LEARNING_STARTS = 1000 #开始训练前所需的初始经验数量
 INPUT_CHANNELS=1 #输入通道数
 NUMS_ACTIONS=4 #动作数
 MODELS_PATH='./models'
+TEST_SIZE=100
 
 def grid_map_learn(env, double_dqn, dueling_dqn, seed):
 
@@ -79,7 +80,7 @@ def grid_map_learn(env, double_dqn, dueling_dqn, seed):
             seed = seed
         )
 
-def grid_map_test(env, double_dqn, dueling_dqn):
+def grid_map_test(env, double_dqn, dueling_dqn,test_size):
     #todo: 调用test中的dqn_testing函数
     dqn_testing(
         file_path=MODELS_PATH,
@@ -87,7 +88,8 @@ def grid_map_test(env, double_dqn, dueling_dqn):
         dueling_dqn=dueling_dqn,
         double_dqn=double_dqn,
         input_channels=INPUT_CHANNELS,
-        nums_actions=NUMS_ACTIONS
+        nums_actions=NUMS_ACTIONS,
+        test_size=test_size
     )
 
 def main():
@@ -146,7 +148,7 @@ def main():
     else:
         # Run Test
         print(f"Testing with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn, test_size=TEST_SIZE)
 
 if __name__ == '__main__':
     main()
