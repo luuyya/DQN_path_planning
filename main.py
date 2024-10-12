@@ -114,7 +114,7 @@ def main():
     test_parser.add_argument("--seed", type=int, default=None, help="Random seed for environment")
     #训练时间步长
     # test_parser.add_argument("--num-timesteps", type=int, default=10000, help="Number of timesteps to run the training")
-    test_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
+    test_parser.add_argument("--gpu", type=int, default=0, help="ID of GPU to be used")
     test_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
     test_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
 
