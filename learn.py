@@ -31,7 +31,7 @@ def dqn_learning(
           env,
           q_func,
           optimizer_spec,
-          exploration,
+        #   exploration,
           reset_num,
           restart_depth,
           replay_buffer_size,
@@ -43,9 +43,14 @@ def dqn_learning(
           target_update_freq,
           double_dqn,
           input_channels,
-          nums_actions
+          nums_actions,
+          seed
         ):
     
+    # 保证随机选择动作的可重复性
+    random.seed(seed)
+    np.random.seed(seed)
+
     # 定义网络
     Q = q_func(input_channels, nums_actions).type(dtype)
     Q_target = q_func(input_channels, nums_actions).type(dtype)
@@ -65,7 +70,11 @@ def dqn_learning(
 
     actions_block=[0,1,2,3]
 
-    for t in itertools.count():
+    exploration = LinearSchedule(100000, 0.1)
+    t = 0
+
+    # for t in itertools.count():
+    while True:
         # 迭代停止条件
         if map_nums>STOP_CONDITION:
             break
@@ -75,6 +84,9 @@ def dqn_learning(
             map_nums+=1
             restart_nums=0
             env.reset()
+            exploration = LinearSchedule(100000, 0.1)
+            t = 0
+            
 
         # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
         # observations = replay_buffer.encode_recent_observation() # 得到前一个状态
@@ -238,3 +250,5 @@ def dqn_learning(
                     'best_mean_episode_reward': best_mean_episode_reward,
                 }
                 log_info(info, t + 1)
+
+        t += 1

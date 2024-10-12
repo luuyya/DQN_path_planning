@@ -23,14 +23,14 @@ LEARNING_FREQ = 4 #四个环境交互步骤（例如，每执行四次动作）�
 LEARNING_RATE = 0.00025
 ALPHA = 0.95 #计算优先经验重放的参数，控制经验重放的优先级
 EPS = 0.01
-EXPLORATION_SCHEDULE = LinearSchedule(100000, 0.1)# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
-LEARNING_STARTS = 10000 #开始训练前所需的初始经验数量
+# EXPLORATION_SCHEDULE = LinearSchedule(100000, 0.1)# 1000000：表示在训练的前10万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
+LEARNING_STARTS = 1000 #开始训练前所需的初始经验数量
 
 INPUT_CHANNELS=1 #输入通道数
 NUMS_ACTIONS=4 #动作数
 MODELS_PATH='./models'
 
-def grid_map_learn(env, double_dqn, dueling_dqn):
+def grid_map_learn(env, double_dqn, dueling_dqn, seed):
 
     #todo:
     optimizer = OptimizerSpec(
@@ -43,7 +43,7 @@ def grid_map_learn(env, double_dqn, dueling_dqn):
             env=env,
             q_func=Dueling_DQN,
             optimizer_spec=optimizer,
-            exploration=EXPLORATION_SCHEDULE,
+            # exploration=EXPLORATION_SCHEDULE,
             reset_num=RESET_NUMS,
             restart_depth=MAP_SIZE*MAP_SIZE,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
@@ -55,14 +55,15 @@ def grid_map_learn(env, double_dqn, dueling_dqn):
             target_update_freq=TARGET_UPDATE_FREQ,
             double_dqn=double_dqn,
             input_channels=INPUT_CHANNELS,
-            nums_actions=NUMS_ACTIONS
+            nums_actions=NUMS_ACTIONS,
+            seed = seed
         )
     else:
         dqn_learning(
             env=env,
             q_func=DQN,
             optimizer_spec=optimizer,
-            exploration=EXPLORATION_SCHEDULE,
+            # exploration=EXPLORATION_SCHEDULE,
             reset_num=RESET_NUMS,
             restart_depth=MAP_SIZE * MAP_SIZE,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
@@ -74,7 +75,8 @@ def grid_map_learn(env, double_dqn, dueling_dqn):
             target_update_freq=TARGET_UPDATE_FREQ,
             double_dqn = double_dqn,
             input_channels=INPUT_CHANNELS,
-            nums_actions=NUMS_ACTIONS
+            nums_actions=NUMS_ACTIONS,
+            seed = seed
         )
 
 def grid_map_test(env, double_dqn, dueling_dqn):
