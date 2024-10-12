@@ -159,6 +159,7 @@ class Map:
         self.initialize_start_end()  # 重新设置起点和终点
         self.cur = self.start.copy()  # 重置当前位置为起点
         self.depth = 0  # 重置深度
+        self.arrive_nums = 0  # 重置到达次数
 
         # 将当前回合的奖励记录到回合奖励列表中
         if self.current_episode_reward != 0:
