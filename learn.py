@@ -31,7 +31,7 @@ def dqn_learning(
           q_func,
           optimizer_spec,
           exploration,
-          stopping_num,
+          reset_num,
           replay_buffer_size,
           batch_size,
           gamma,
@@ -57,14 +57,14 @@ def dqn_learning(
     num_param_updates = 0
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
-    # current_obs = env.restart()
+    current_obs = env.restart()
 
     actions_block=[0,1,2,3]
 
     for t in itertools.count():
         # todo:当有一定的到达次数后，进行地图的reset
-        if env.get_total_depth() > stopping_num:
-            break
+        if env.get_arrive_nums() > reset_num:
+            env.reset()
 
         # last_stored_frame_idx = replay_buffer.store_frame(last_obs) # 存入状态
         # observations = replay_buffer.encode_recent_observation() # 得到前一个状态

@@ -12,7 +12,7 @@ from utils import plot
 
 MAP_SIZE=20
 OBSTACLE_RATIO=0.1
-NUM_TIMESTPES=10000
+RESET_NUMS=100
 
 BATCH_SIZE = 1000
 REPLAY_BUFFER_SIZE = 100000
@@ -44,7 +44,7 @@ def grid_map_learn(env, double_dqn, dueling_dqn):
             q_func=Dueling_DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_num=NUM_TIMESTPES,
+            reset_num=RESET_NUMS,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
@@ -62,7 +62,7 @@ def grid_map_learn(env, double_dqn, dueling_dqn):
             q_func=DQN,
             optimizer_spec=optimizer,
             exploration=EXPLORATION_SCHEDULE,
-            stopping_num=NUM_TIMESTPES,
+            reset_num=RESET_NUMS,
             replay_buffer_size=REPLAY_BUFFER_SIZE,
             batch_size=BATCH_SIZE,
             gamma=GAMMA,
