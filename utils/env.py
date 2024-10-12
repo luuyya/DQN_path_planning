@@ -185,6 +185,8 @@ class Map:
 
         return cur_state
 
+    def get_arrive_nums(self):
+        return len(self.episode_rewards)
 
 
 if __name__ == '__main__':
