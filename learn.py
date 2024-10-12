@@ -177,9 +177,6 @@ def dqn_learning(
             model_save_path = f"models/{add_str}_{t}_{timestamp}.model"
             torch.save(Q.state_dict(), model_save_path)
 
-        # print(f"epoch {t}")
-        # print(env.get_total_depth())
-
         episode_rewards = env.get_episode_rewards()
         if len(episode_rewards) > 0:
             mean_episode_reward = np.mean(episode_rewards[-100:])

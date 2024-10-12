@@ -23,7 +23,7 @@ LEARNING_FREQ = 4 #四个环境交互步骤（例如，每执行四次动作）�
 LEARNING_RATE = 0.00025
 ALPHA = 0.95 #计算优先经验重放的参数，控制经验重放的优先级
 EPS = 0.01
-EXPLORATION_SCHEDULE = LinearSchedule(1000000, 0.1)# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
+EXPLORATION_SCHEDULE = LinearSchedule(100000, 0.1)# 1000000：表示在训练的前100万步内，探索概率将逐渐降低。0.1：表示最终探索概率的下限，即在经过设定的步数后，探索概率将稳定在10%。
 LEARNING_STARTS = 10000 #开始训练前所需的初始经验数量
 
 INPUT_CHANNELS=1 #输入通道数
