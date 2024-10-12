@@ -22,6 +22,7 @@ class Map:
         self.depth = 0
         self.episode_rewards = []  # 用于记录每一回合的累积奖励
         self.current_episode_reward = 0  # 当前回合奖励
+        self.arrive_nums = 0
 
         if self.seed is not None:
             np.random.seed(self.seed)
@@ -98,7 +99,7 @@ class Map:
 
         # 初始化下一个状态、奖励和done标志
         next_state = copy.deepcopy(self.grid)
-        reward = -1  # 默认奖励
+        reward = 0  # 默认奖励
         done = 0  # 默认未结束
 
         # 检查下一个位置是否在边界内
@@ -113,6 +114,7 @@ class Map:
                 if np.array_equal(self.cur, self.end):
                     reward = 100  # 到达终点的奖励
                     done = 1
+                    self.arrive_nums += 1
             else:
                 reward = -10  # 碰到障碍物的惩罚
                 done = 2
@@ -186,8 +188,7 @@ class Map:
         return cur_state
 
     def get_arrive_nums(self):
-        return len(self.episode_rewards)
-
+        return self.arrive_nums
 
 if __name__ == '__main__':
     env = Map(size=8, obstacle_ratio=0.1, seed=34)

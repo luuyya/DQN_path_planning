@@ -196,7 +196,8 @@ def dqn_learning(
             else:
                 print("mean reward (100 episodes) -")
                 print("best mean reward -")
-            print(f"episodes {len(episode_rewards)}")
+            # print(f"episodes {len(episode_rewards)}")
+            print(f"arrive_nums {env.get_arrive_nums()}")
             print(f"exploration {exploration.value(t):.6f}")
             print(f"learning_rate {optimizer_spec.kwargs['lr']:.6f}")
             sys.stdout.flush()
