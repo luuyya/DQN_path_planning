@@ -141,12 +141,12 @@ def main():
     if is_train:
         # Run training
         print(f"Training with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_learn(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        grid_map_learn(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn, seed=args.seed)
 
     else:
         # Run Test
         print(f"Testing with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn)
+        grid_map_test(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn, seed=args.seed)
 
 if __name__ == '__main__':
     main()

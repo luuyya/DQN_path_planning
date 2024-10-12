@@ -152,7 +152,8 @@ def dqn_learning(
                 Q_target_a_index = Q_target_a_index.squeeze()
 
                 # 将进入死状态的obs的Q_target设置为0
-                judgement=np.where(done_batch==0,1,0)
+                # judgement=np.where(done_batch==0,1,0)
+                judgement = torch.from_numpy(np.where(done_batch.cpu().numpy() == 0, 1, 0)).type(dtype)
                 Q_target_a_index = judgement * Q_target_a_index
 
                 error = rew_batch + gamma * Q_target_a_index - Q_c_a
@@ -162,7 +163,8 @@ def dqn_learning(
                 Q_n_a_index, a_index = Q_n_values.max(1)
 
                 # 将进入死状态的obs的Q_target设置为0
-                judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
+                # judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
+                judgement = torch.from_numpy(np.where(done_batch.cpu().numpy() == 0, 1, 0)).type(dtype)
                 Q_n_a_index = judgement * Q_n_a_index
 
                 error = rew_batch + gamma * Q_n_a_index - Q_c_a
@@ -195,8 +197,10 @@ def dqn_learning(
             add_str = ''
             if double_dqn:
                 add_str = 'double'
+            else:
+                add_str = 'regular'
             if Q.name != 'DQN':
-                add_str = 'dueling'
+                add_str += '_dueling'
             timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
             model_save_path = f"models/{add_str}_{t}_{timestamp}.model"
             torch.save(Q.state_dict(), model_save_path)
