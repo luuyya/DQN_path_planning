@@ -4,7 +4,7 @@ import numpy as np
 import random
 import itertools
 from collections import namedtuple
-from utils.replay_buffer import ReplayBuffer
+from utils.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 from utils.schedules import LinearSchedule
 from logger import Logger
 import time
@@ -31,7 +31,7 @@ def dqn_learning(
           env,
           q_func,
           optimizer_spec,
-        #   exploration,
+          # exploration,
           reset_num,
           restart_depth,
           replay_buffer_size,
@@ -59,7 +59,7 @@ def dqn_learning(
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
 
     # 初始化回放缓冲区
-    replay_buffer = ReplayBuffer(replay_buffer_size)
+    replay_buffer = ReplayBuffer(replay_buffer_size,[env.size,env.size],1,0.9)
 
     num_param_updates = 0
     mean_episode_reward = -float('nan')

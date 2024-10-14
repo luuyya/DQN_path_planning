@@ -21,11 +21,11 @@ class ReplayBuffer(object):
         self.next_idx = 0
         self.num_in_buffer = 0
 
-        self.cur_obs = np.empty([self.size, obs_dim], dtype=np.int32)
+        self.cur_obs = np.empty([self.size]+obs_dim, dtype=np.int32)
         self.action = np.empty([self.size], dtype=np.int32)
         self.reward = np.empty([self.size], dtype=np.float32)
         self.done = np.empty([self.size], dtype=np.int32)
-        self.next_obs = np.empty([self.size, obs_dim], dtype=np.int32)
+        self.next_obs = np.empty([self.size]+obs_dim, dtype=np.int32)
 
         self.n_step_buffer = deque(maxlen=n_step)
         self.n_step = n_step
