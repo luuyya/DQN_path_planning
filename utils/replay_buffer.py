@@ -120,7 +120,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
         super(PrioritizedReplayBuffer, self).__init__(size, obs_dim, n_step, gamma)
         self.max_priority = 0
-        self.tree_ptr = 1.0
+        self.tree_ptr = 1
         self.alpha = alpha
 
         tree_capacity = 1
@@ -195,4 +195,3 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         weight = weight / max_weight
 
         return weight
-    
