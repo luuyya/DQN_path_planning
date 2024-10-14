@@ -1,8 +1,8 @@
 import copy
 import numpy as np
 
-CURRENT_POSITION = 2
-END_POSITION = 3
+CURRENT_POSITION = -10
+END_POSITION = 10
 
 class Map:
     def __init__(self, size=8, obstacle_ratio=0.1, seed=None):
