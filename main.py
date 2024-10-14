@@ -30,8 +30,9 @@ INPUT_CHANNELS=1 #输入通道数
 NUMS_ACTIONS=4 #动作数
 MODELS_PATH='./models'
 TEST_SIZE=100
+N_STEP = 1
 
-def grid_map_learn(env, double_dqn, dueling_dqn, seed):
+def grid_map_learn(env, double_dqn, dueling_dqn, prioritized_buffer, seed):
 
     #todo:
     optimizer = OptimizerSpec(
@@ -39,46 +40,32 @@ def grid_map_learn(env, double_dqn, dueling_dqn, seed):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS) # 传递给优化器的关键字参数
     )
 
+    model=None
+
     if dueling_dqn:
-        dqn_learning(
-            env=env,
-            q_func=Dueling_DQN,
-            optimizer_spec=optimizer,
-            # exploration=EXPLORATION_SCHEDULE,
-            reset_num=RESET_NUMS,
-            restart_depth=MAP_SIZE*MAP_SIZE,
-            replay_buffer_size=REPLAY_BUFFER_SIZE,
-            batch_size=BATCH_SIZE,
-            gamma=GAMMA,
-            learning_starts=LEARNING_STARTS,
-            learning_freq=LEARNING_FREQ,
-            # frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn=double_dqn,
-            input_channels=INPUT_CHANNELS,
-            nums_actions=NUMS_ACTIONS,
-            seed = seed
-        )
+        model=Dueling_DQN
     else:
-        dqn_learning(
-            env=env,
-            q_func=DQN,
-            optimizer_spec=optimizer,
-            # exploration=EXPLORATION_SCHEDULE,
-            reset_num=RESET_NUMS,
-            restart_depth=MAP_SIZE * MAP_SIZE,
-            replay_buffer_size=REPLAY_BUFFER_SIZE,
-            batch_size=BATCH_SIZE,
-            gamma=GAMMA,
-            learning_starts=LEARNING_STARTS,
-            learning_freq=LEARNING_FREQ,
-            # frame_history_len=FRAME_HISTORY_LEN,
-            target_update_freq=TARGET_UPDATE_FREQ,
-            double_dqn = double_dqn,
-            input_channels=INPUT_CHANNELS,
-            nums_actions=NUMS_ACTIONS,
-            seed = seed
-        )
+        model=DQN
+
+    dqn_learning(
+        env=env,
+        q_func=model,
+        optimizer_spec=optimizer,
+        reset_num=RESET_NUMS,
+        restart_depth=MAP_SIZE * MAP_SIZE,
+        prioritized_buffer=prioritized_buffer,
+        replay_buffer_size=REPLAY_BUFFER_SIZE,
+        n_step = N_STEP,
+        batch_size=BATCH_SIZE,
+        gamma=GAMMA,
+        learning_starts=LEARNING_STARTS,
+        learning_freq=LEARNING_FREQ,
+        target_update_freq=TARGET_UPDATE_FREQ,
+        double_dqn = double_dqn,
+        input_channels=INPUT_CHANNELS,
+        nums_actions=NUMS_ACTIONS,
+        seed = seed
+    )
 
 def grid_map_test(env, double_dqn, dueling_dqn,test_size):
     #todo: 调用test中的dqn_testing函数
@@ -107,6 +94,7 @@ def main():
     train_parser.add_argument("--gpu", type=int, default=None, help="ID of GPU to be used")
     train_parser.add_argument("--double-dqn", type=int, default=0, help="Use Double DQN - 0 = No, 1 = Yes")
     train_parser.add_argument("--dueling-dqn", type=int, default=0, help="Use Dueling DQN - 0 = No, 1 = Yes")
+    train_parser.add_argument("--prioritized-buffer", type=int, default=0, help="Use Prioritized Replay Buffer - 0 = No, 1 = Yes")
 
     #todo:test
     #各种参数设置
@@ -138,12 +126,13 @@ def main():
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)
+    prioritized_buffer = (args.prioritized_buffer == 1)
     is_train = args.subcommand=="train"
 
     if is_train:
         # Run training
-        print(f"Training with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}")
-        grid_map_learn(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn, seed=args.seed)
+        print(f"Training with map size {MAP_SIZE}, obstacle ratio {OBSTACLE_RATIO}, seed {args.seed}, double_dqn {double_dqn}, dueling_dqn {dueling_dqn}, prioritized_buffer {prioritized_buffer}")
+        grid_map_learn(env, double_dqn=double_dqn, dueling_dqn=dueling_dqn, prioritized_buffer=prioritized_buffer, seed=args.seed)
 
     else:
         # Run Test
