@@ -243,6 +243,8 @@ def dqn_learning(
                                 Q_target,
                                 double_dqn)
             # 限制误差区间
+            if not e_loss == None:
+                replay_buffer_one.update_priorities(indexes, e_loss)
             clipped_error = -1.0 * loss.clamp(V_MIN, V_MAX)
             optimizer.zero_grad()
             loss.backward(clipped_error.data)
