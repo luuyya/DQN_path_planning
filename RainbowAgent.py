@@ -32,15 +32,15 @@ def calculate_loss(replay_buffer_one,
         cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes, beta)
     else:
         cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer_one.sample_batch_from_indexes(indexes)
-    weights = torch.FloatTensor(
-            weights.reshape(-1, 1)
-        ).type(dtype)
+    weights = torch.FloatTensor(weights.reshape(-1, 1)).type(dtype)
     
     samples = (cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch)
     elementwise_loss = compute_dqn_loss(samples, gamma, Q, Q_target, double_dqn)
 
     if prioritized_buffer:
         loss = torch.mean(elementwise_loss * weights)
+
+
 
     if n_step > 1:
         gamma = gamma ** n_step
@@ -56,7 +56,7 @@ def calculate_loss(replay_buffer_one,
         loss_for_prior = elementwise_loss.detach().cpu().numpy()
         new_priorities = loss_for_prior + PRIOR_EPS
     
-    return loss.item(), indexes, new_priorities
+    return loss, indexes, new_priorities
 
 def compute_dqn_loss(samples, 
                      gamma, 
@@ -103,7 +103,7 @@ def compute_dqn_loss(samples,
         judgement = torch.from_numpy(np.where(done.cpu().numpy() == 0, 1, 0)).type(dtype)
         Q_n_a_index = judgement * Q_n_a_index
 
-        loss = F.smooth_l1_loss(reward + gamma * Q_target_a_index,Q_c_a)
+        loss = F.smooth_l1_loss(reward + gamma * Q_n_a_index,Q_c_a)
 
     return loss
 
@@ -235,72 +235,22 @@ def dqn_learning(
         current_obs = next_state
 
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer_one.can_sample(batch_size)): # 模型训练
-            if not prioritized_buffer:
-                if n_step==1:
-                    cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch,weights = replay_buffer_one.sample_batch(batch_size,beta)
-
-
-
-                else:
-                    indexes=replay_buffer_one.sample_batch_index(batch_size)
-                    cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes,beta)
-                    cur_obs_batch_n, act_batch_n, rew_batch_n, next_obs_batch_n, done_batch_n = replay_buffer_n.sample_batch_from_indexes(indexes)
-
-
-
-
-            else:
-                cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer_one.sample_batch(batch_size,beta)
-
-
-            #修改各个变量的类型
-            cur_obs_batch = torch.from_numpy(cur_obs_batch).type(dtype)
-            act_batch = torch.from_numpy(act_batch).type(dlongtype)
-            rew_batch = torch.from_numpy(rew_batch).type(dtype)
-            next_obs_batch = torch.from_numpy(next_obs_batch).type(dtype)
-            done_batch = torch.from_numpy(done_batch).type(dtype)
-
-            Q_values = Q(cur_obs_batch.unsqueeze(1))
-            Q_c_a = Q_values.gather(1, act_batch.unsqueeze(1)) #选取指定action的q值
-
-            Q_c_a = Q_c_a.squeeze()
-
-            if (double_dqn):
-                # Double dqn
-                Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
-                _, a_index = Q_n_values.max(1)
-
-                # 选取Q_target中在Q中最大的的动作
-                Q_target_n_values = Q_target(next_obs_batch.unsqueeze(1)).detach()
-                Q_target_a_index = Q_target_n_values.gather(1, a_index.unsqueeze(1))
-                Q_target_a_index = Q_target_a_index.squeeze()
-
-                # 将进入死状态的obs的Q_target设置为0
-                # judgement=np.where(done_batch==0,1,0)
-                judgement = torch.from_numpy(np.where(done_batch.cpu().numpy() == 0, 1, 0)).type(dtype)
-                Q_target_a_index = judgement * Q_target_a_index
-
-                error = rew_batch + gamma * Q_target_a_index - Q_c_a
-            else:
-                # regular DQN
-                Q_n_values = Q(next_obs_batch.unsqueeze(1)).detach()
-                Q_n_a_index, a_index = Q_n_values.max(1)
-
-                # 将进入死状态的obs的Q_target设置为0
-                # judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
-                judgement = torch.from_numpy(np.where(done_batch.cpu().numpy() == 0, 1, 0)).type(dtype)
-                Q_n_a_index = judgement * Q_n_a_index
-
-                error = rew_batch + gamma * Q_n_a_index - Q_c_a
-
+            loss,indexes,e_loss=calculate_loss(replay_buffer_one,
+                                replay_buffer_n,
+                                prioritized_buffer,
+                                gamma,
+                                Q,
+                                Q_target,
+                                double_dqn)
             # 限制误差区间
-            clipped_error = -1.0 * error.clamp(-1, 1)
-
+            clipped_error = -1.0 * loss.clamp(V_MIN, V_MAX)
             optimizer.zero_grad()
-            Q_c_a.backward(clipped_error.data)
+            loss.backward(clipped_error.data)
             optimizer.step()
             num_param_updates += 1
 
             # 更新参数
             if double_dqn and num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
+
+        t+=1
