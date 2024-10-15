@@ -2,6 +2,7 @@ import random
 import numpy as np
 from utils.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 import torch
+from torch import F
 from utils.schedules import LinearSchedule
 
 # CUDA变量
@@ -12,13 +13,99 @@ dlongtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTe
 LOG_EVERY_N_STEPS = 1000
 SAVE_MODEL_EVERY_N_STEPS = 10000
 STOP_CONDITION = 500
-beta = 0.6
+PRIOR_EPS = 1e-6
+V_MAX = 10
+V_MIN = -1
 
-def calculate_loss(prioritized_buffer, n_step):
-    pass
+def calculate_loss(replay_buffer_one,
+                   replay_buffer_n,
+                   prioritized_buffer, 
+                   n_step, 
+                   batch_size,
+                   beta, 
+                   gamma,
+                   Q,
+                   Q_target,
+                   double_dqn):
+    indexes=replay_buffer_one.sample_batch_index(batch_size)
+    if prioritized_buffer:
+        cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes, beta)
+    else:
+        cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer_one.sample_batch_from_indexes(indexes)
+    weights = torch.FloatTensor(
+            weights.reshape(-1, 1)
+        ).type(dtype)
+    
+    samples = (cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch)
+    elementwise_loss = compute_dqn_loss(samples, gamma, Q, Q_target, double_dqn)
 
-def compute_dqn_loss():
-    pass
+    if prioritized_buffer:
+        loss = torch.mean(elementwise_loss * weights)
+
+    if n_step > 1:
+        gamma = gamma ** n_step
+        samples = replay_buffer_n.sample_batch_from_indexes(indexes)
+        elementwise_loss_n_loss = compute_dqn_loss(samples, gamma, Q, Q_target, double_dqn)
+        elementwise_loss += elementwise_loss_n_loss
+
+        loss = torch.mean(elementwise_loss * weights)
+
+    new_priorities = None
+
+    if prioritized_buffer:
+        loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        new_priorities = loss_for_prior + PRIOR_EPS
+    
+    return loss.item(), indexes, new_priorities
+
+def compute_dqn_loss(samples, 
+                     gamma, 
+                     Q, 
+                     Q_target, 
+                     double_dqn):
+    state = torch.FloatTensor(samples[0]).type(dtype)
+    next_state = torch.FloatTensor(samples[3]).type(dtype)
+    action =samples[1]
+    reward = torch.FloatTensor(samples[2]).type(dtype)
+    done = torch.LongTensor(samples[4]).type(dlongtype)
+
+    # todo: Catogorical DQN can be used
+
+    Q_values = Q(state.unsqueeze(1))
+    Q_c_a = Q_values.gather(1, action.unsqueeze(1)) #选取指定action的q值
+
+    Q_c_a = Q_c_a.squeeze()
+
+    if (double_dqn):
+        # Double dqn
+        Q_n_values = Q(next_state.unsqueeze(1)).detach()
+        _, a_index = Q_n_values.max(1)
+
+        # 选取Q_target中在Q中最大的的动作
+        Q_target_n_values = Q_target(next_state.unsqueeze(1)).detach()
+        Q_target_a_index = Q_target_n_values.gather(1, a_index.unsqueeze(1))
+        Q_target_a_index = Q_target_a_index.squeeze()
+
+        # 将进入死状态的obs的Q_target设置为0
+        # judgement=np.where(done_batch==0,1,0)
+        judgement = torch.from_numpy(np.where(done.cpu().numpy() == 0, 1, 0)).type(dtype)
+        Q_target_a_index = judgement * Q_target_a_index
+
+        # use smooth L1 loss here
+        loss = F.smooth_l1_loss(reward + gamma * Q_target_a_index,Q_c_a)
+    else:
+        # regular DQN
+        Q_n_values = Q(next_state.unsqueeze(1)).detach()
+        Q_n_a_index, a_index = Q_n_values.max(1)
+
+        # 将进入死状态的obs的Q_target设置为0
+        # judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
+        judgement = torch.from_numpy(np.where(done.cpu().numpy() == 0, 1, 0)).type(dtype)
+        Q_n_a_index = judgement * Q_n_a_index
+
+        loss = F.smooth_l1_loss(reward + gamma * Q_target_a_index,Q_c_a)
+
+    return loss
 
 def dqn_learning(
           env,
