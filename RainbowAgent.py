@@ -17,6 +17,7 @@ PRIOR_EPS = 1e-6
 V_MAX = 10
 V_MIN = -1
 
+
 def calculate_loss(replay_buffer_one,
                    replay_buffer_n,
                    prioritized_buffer, 
