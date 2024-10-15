@@ -4,7 +4,8 @@ import torch.optim as optim
 import numpy as np
 
 from model import DQN, Dueling_DQN
-from learn import dqn_learning, OptimizerSpec
+# from learn import dqn_learning, OptimizerSpec
+from RainbowAgent import dqn_learning, OptimizerSpec
 from test import dqn_testing
 from utils.env import Map
 from utils.schedules import *
@@ -122,7 +123,7 @@ def main():
     env.initialize_start_end()
     print(f"Start: {env.start}, End: {env.end}")
 
-    plot.plot_map(env)     
+    # plot.plot_map(env)
 
     double_dqn = (args.double_dqn == 1)
     dueling_dqn = (args.dueling_dqn == 1)

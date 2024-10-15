@@ -1,9 +1,15 @@
 import random
 import numpy as np
+
 from utils.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 import torch
-from torch import F
+import torch.nn.functional as F
 from utils.schedules import LinearSchedule
+from collections import namedtuple
+import os
+import sys
+
+OptimizerSpec = namedtuple("OptimizerSpec", ["constructor", "kwargs"])
 
 # CUDA变量
 USE_CUDA = torch.cuda.is_available()
@@ -14,8 +20,9 @@ LOG_EVERY_N_STEPS = 1000
 SAVE_MODEL_EVERY_N_STEPS = 10000
 STOP_CONDITION = 500
 PRIOR_EPS = 1e-6
-V_MAX = 10
 V_MIN = -1
+V_MAX = 100
+NUM_FRAMES = 100000
 
 
 def calculate_loss(replay_buffer_one,
@@ -29,19 +36,21 @@ def calculate_loss(replay_buffer_one,
                    Q_target,
                    double_dqn):
     indexes=replay_buffer_one.sample_batch_index(batch_size)
+    # print(indexes)
+    weights = None
     if prioritized_buffer:
         cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes, beta)
+        weights = torch.FloatTensor(weights.reshape(-1, 1)).type(dtype)
     else:
         cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer_one.sample_batch_from_indexes(indexes)
-    weights = torch.FloatTensor(weights.reshape(-1, 1)).type(dtype)
     
     samples = (cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch)
     elementwise_loss = compute_dqn_loss(samples, gamma, Q, Q_target, double_dqn)
 
     if prioritized_buffer:
         loss = torch.mean(elementwise_loss * weights)
-
-
+    else:
+        loss = elementwise_loss
 
     if n_step > 1:
         gamma = gamma ** n_step
@@ -66,7 +75,7 @@ def compute_dqn_loss(samples,
                      double_dqn):
     state = torch.FloatTensor(samples[0]).type(dtype)
     next_state = torch.FloatTensor(samples[3]).type(dtype)
-    action =samples[1]
+    action = torch.LongTensor(samples[1]).type(dlongtype)
     reward = torch.FloatTensor(samples[2]).type(dtype)
     done = torch.LongTensor(samples[4]).type(dlongtype)
 
@@ -166,6 +175,7 @@ def dqn_learning(
 
     exploration = LinearSchedule(100000, 0.1)
     t = 0
+    beta = 0.6
 
     while True:
         # 迭代停止条件
@@ -181,6 +191,7 @@ def dqn_learning(
             env.reset()
             exploration = LinearSchedule(100000, 0.1)
             t = 0
+            beta = 0.6
             
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
@@ -209,10 +220,9 @@ def dqn_learning(
             replay_buffer_one.store_frame(current_obs, action, reward, done, next_state)
             replay_buffer_n.store_frame(current_obs, action, reward, done, next_state)
 
-        # todo:计算beta
         if prioritized_buffer:
-            f = min()
-            beta = beta + f * (1.0 - beta)
+            fraction = min(t / NUM_FRAMES, 1.0)
+            beta = beta + fraction * (1.0 - beta)
 
         score += reward
 
@@ -237,12 +247,16 @@ def dqn_learning(
 
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer_one.can_sample(batch_size)): # 模型训练
             loss,indexes,e_loss=calculate_loss(replay_buffer_one,
-                                replay_buffer_n,
-                                prioritized_buffer,
-                                gamma,
-                                Q,
-                                Q_target,
-                                double_dqn)
+                                               replay_buffer_n,
+                                               prioritized_buffer,
+                                               n_step,
+                                               batch_size,
+                                               beta,
+                                               gamma,
+                                               Q,
+                                               Q_target,
+                                               double_dqn
+                                               )
             # 限制误差区间
             if not e_loss == None:
                 replay_buffer_one.update_priorities(indexes, e_loss)
@@ -255,5 +269,43 @@ def dqn_learning(
             # 更新参数
             if double_dqn and num_param_updates % target_update_freq == 0:
                 Q_target.load_state_dict(Q.state_dict())
+
+        if t % SAVE_MODEL_EVERY_N_STEPS == 0:
+            os.makedirs("models", exist_ok=True)
+            add_str = ''
+            if double_dqn:
+                add_str = 'double'
+            else:
+                add_str = 'regular'
+            if Q.name != 'DQN':
+                add_str += '_dueling'
+            if prioritized_buffer:
+                add_str += '_prioritized'
+            model_save_path = f"models/{add_str}_{n_step}_{map_nums}_{t}_{seed}.model"
+            torch.save(Q.state_dict(), model_save_path)
+
+        episode_rewards = env.get_episode_rewards()
+        if len(episode_rewards) > 0:
+            mean_episode_reward = np.mean(episode_rewards[-100:])
+            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
+
+        if t % LOG_EVERY_N_STEPS == 0:
+            print("---------------------------------")
+            print(f"Timestep {t}")
+            print(f"learning started? {t > learning_starts}")
+            if len(episode_rewards) > 0:
+                print(f"mean reward (100 episodes) {mean_episode_reward:.6f}")
+                print(f"best mean reward {best_mean_episode_reward:.6f}")
+            else:
+                print("mean reward (100 episodes) -")
+                print("best mean reward -")
+            # print(f"episodes {len(episode_rewards)}")
+            print(f"map_nums {map_nums}")
+            print(f"invalid_map_nums {invalid_map_nums}")
+            print(f"restart_nums {restart_nums}")
+            print(f"arrive_nums {env.get_arrive_nums()}")
+            print(f"exploration {exploration.value(t):.6f}")
+            print(f"learning_rate {optimizer_spec.kwargs['lr']:.6f}")
+            sys.stdout.flush()
 
         t+=1

@@ -2,8 +2,7 @@ import numpy as np
 import random
 from collections import deque
 
-from utils.env import Map
-from segment_tree import SumSegmentTree,MinSegmentTree
+from utils.segment_tree import SumSegmentTree, MinSegmentTree
 
 class ReplayBuffer(object):
     """
@@ -73,7 +72,7 @@ class ReplayBuffer(object):
         self.n_step_buffer.append(transition)
 
         r, d, next = self._get_n_step_info(self.n_step_buffer, self.gamma)
-        cur, a = self.n_step_buffer[0][:3]
+        cur, a = self.n_step_buffer[0][:2]
 
         self.cur_obs[self.next_idx] = cur
         self.action[self.next_idx] = a
