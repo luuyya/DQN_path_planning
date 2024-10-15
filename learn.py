@@ -59,7 +59,16 @@ def dqn_learning(
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
 
     # 初始化回放缓冲区
-    replay_buffer = ReplayBuffer(replay_buffer_size,[env.size,env.size],1,0.9)
+    replay_buffer_one=None
+    replay_buffer_n=None
+
+    if not prioritized_buffer:
+        replay_buffer_one = ReplayBuffer(replay_buffer_size,[env.size,env.size],1,0.9)
+    else:
+        replay_buffer_one = PrioritizedReplayBuffer(replay_buffer_size,[env.size,env.size],1,0.9,0.6)
+
+    if n_step >1:
+        replay_buffer_n = ReplayBuffer(replay_buffer_size, [env.size, env.size], n_step, 0.9)
 
     num_param_updates = 0
     mean_episode_reward = -float('nan')
@@ -68,6 +77,12 @@ def dqn_learning(
     map_nums=0
     restart_nums=0
     invalid_map_nums=0
+
+    #todo: what is beta
+    beta=0.6
+
+    score=0
+    scores=[]
 
     actions_block=[0,1,2,3]
 
@@ -113,25 +128,58 @@ def dqn_learning(
                 action = np.random.choice(actions_block)
 
         action, reward, done, next_state = env.step(action)
-        replay_buffer.store_frame(current_obs, action, reward, done, next_state) #存储信息
+
+        # 存储信息
+        if replay_buffer_n == None:
+            replay_buffer_one.store_frame(current_obs, action, reward, done, next_state)
+        else:
+            replay_buffer_one.store_frame(current_obs, action, reward, done, next_state)
+            replay_buffer_n.store_frame(current_obs, action, reward, done, next_state)
+
+        # todo:计算beta
+        if prioritized_buffer:
+            beta=beta+f*(1.0-beta)
+
+        score+=reward
 
         if done==1:
             next_state = env.restart()
             restart_nums+=1
+            scores.append(score)
+            score=0
         elif done==2:
             actions_block.remove(action)
+            score+=10
         else:
             actions_block = [0,1,2,3]
 
         if env.get_total_depth() > restart_depth:
             next_state = env.restart()
             restart_nums += 1
+            scores.append(score)
+            score=0
 
         current_obs = next_state
 
-        if (t > learning_starts and t % learning_freq == 0 and replay_buffer.can_sample(batch_size)): # 模型训练
+        if (t > learning_starts and t % learning_freq == 0 and replay_buffer_one.can_sample(batch_size)): # 模型训练
+            if not prioritized_buffer:
+                if n_step==1:
+                    cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch,weights = replay_buffer_one.sample_batch(batch_size,beta)
 
-            cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer.sample_batch(batch_size)
+
+
+                else:
+                    indexes=replay_buffer_one.sample_batch_index(batch_size)
+                    cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes,beta)
+                    cur_obs_batch_n, act_batch_n, rew_batch_n, next_obs_batch_n, done_batch_n = replay_buffer_n.sample_batch_from_indexes(indexes)
+
+
+
+
+            else:
+                cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch = replay_buffer_one.sample_batch(batch_size,beta)
+
+
             #修改各个变量的类型
             cur_obs_batch = torch.from_numpy(cur_obs_batch).type(dtype)
             act_batch = torch.from_numpy(act_batch).type(dlongtype)

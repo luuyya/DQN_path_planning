@@ -144,8 +144,18 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         if not beta>0:
             raise ValueError("beta设置异常")
 
-        indexes = self._sample_proportional()
+        indexes = self.sample_batch_index(batch_size)
 
+        cur_obs_batch = self.cur_obs[indexes]
+        action_batch = self.action[indexes]
+        r_batch = self.reward[indexes]
+        next_obs_batch = self.next_obs[indexes]
+        done_batch = self.done[indexes]
+        weights = np.array([self._calculate_weight(i, beta) for i in indexes])
+
+        return cur_obs_batch, action_batch, r_batch, next_obs_batch, done_batch, weights
+
+    def sample_batch_from_indexes(self, indexes, beta=0.4):
         cur_obs_batch = self.cur_obs[indexes]
         action_batch = self.action[indexes]
         r_batch = self.reward[indexes]
@@ -168,7 +178,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
             self.max_priority = max(self.max_priority, priority)
 
-    def _sample_proportional(self, batch_size):
+    def sample_batch_index(self, batch_size):
         """Sample indices based on proportions."""
         indexes = []
         p_total = self.sum_tree.sum(0, self.size - 1)
