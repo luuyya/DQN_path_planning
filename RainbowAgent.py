@@ -36,7 +36,7 @@ def calculate_loss(replay_buffer_one,
                    Q_target,
                    double_dqn):
     indexes=replay_buffer_one.sample_batch_index(batch_size)
-    # print(indexes)
+    # print(indexes)+
     weights = None
     if prioritized_buffer:
         cur_obs_batch, act_batch, rew_batch, next_obs_batch, done_batch, weights = replay_buffer_one.sample_batch_from_indexes(indexes, beta)
@@ -79,43 +79,40 @@ def compute_dqn_loss(samples,
     reward = torch.FloatTensor(samples[2]).type(dtype)
     done = torch.LongTensor(samples[4]).type(dlongtype)
 
-    # todo: Catogorical DQN can be used
-
     Q_values = Q(state.unsqueeze(1))
-    Q_c_a = Q_values.gather(1, action.unsqueeze(1)) #选取指定action的q值
-
+    Q_c_a = Q_values.gather(1, action.unsqueeze(1))  # 选取指定action的q值
     Q_c_a = Q_c_a.squeeze()
 
-    if (double_dqn):
-        # Double dqn
+    if double_dqn:
+        # Double DQN
         Q_n_values = Q(next_state.unsqueeze(1)).detach()
         _, a_index = Q_n_values.max(1)
 
-        # 选取Q_target中在Q中最大的的动作
+        # 选取Q_target中在Q中最大的动作
         Q_target_n_values = Q_target(next_state.unsqueeze(1)).detach()
         Q_target_a_index = Q_target_n_values.gather(1, a_index.unsqueeze(1))
         Q_target_a_index = Q_target_a_index.squeeze()
 
         # 将进入死状态的obs的Q_target设置为0
-        # judgement=np.where(done_batch==0,1,0)
         judgement = torch.from_numpy(np.where(done.cpu().numpy() == 0, 1, 0)).type(dtype)
         Q_target_a_index = judgement * Q_target_a_index
 
-        # use smooth L1 loss here
-        loss = F.smooth_l1_loss(reward + gamma * Q_target_a_index,Q_c_a)
+        # 使用smooth L1损失
+        target = reward + gamma * Q_target_a_index
+        loss = F.smooth_l1_loss(target, Q_c_a, reduction='none')  # 不求和，返回每个样本的损失
+
     else:
-        # regular DQN
+        # 常规DQN
         Q_n_values = Q(next_state.unsqueeze(1)).detach()
         Q_n_a_index, a_index = Q_n_values.max(1)
 
         # 将进入死状态的obs的Q_target设置为0
-        # judgement=torch.from_numpy(np.where(done_batch==0,1,0)).type(dtype)
         judgement = torch.from_numpy(np.where(done.cpu().numpy() == 0, 1, 0)).type(dtype)
         Q_n_a_index = judgement * Q_n_a_index
 
-        loss = F.smooth_l1_loss(reward + gamma * Q_n_a_index,Q_c_a)
+        loss = F.smooth_l1_loss(reward + gamma * Q_n_a_index, Q_c_a, reduction='none')  # 不求和，返回每个样本的损失
 
-    return loss
+    return loss  # 返回每个样本的损失
 
 def dqn_learning(
           env,
@@ -178,21 +175,24 @@ def dqn_learning(
     beta = 0.6
 
     while True:
-        # 迭代停止条件
-        if map_nums>STOP_CONDITION:
+        # # 迭代停止条件
+        # if map_nums>STOP_CONDITION:
+        #     break
+        #
+        # # 当有一定的到达次数后，进行地图的reset
+        # if len(actions_block)==0 or env.get_arrive_nums() > reset_num:
+        #     if len(actions_block)==0:
+        #         invalid_map_nums+=0
+        #     map_nums+=1
+        #     restart_nums=0
+        #     env.reset()
+        #     exploration = LinearSchedule(100000, 0.1)
+        #     t = 0
+        #     beta = 0.6
+
+        if env.get_arrive_nums() > STOP_CONDITION:
             break
 
-        # 当有一定的到达次数后，进行地图的reset
-        if len(actions_block)==0 or env.get_arrive_nums() > reset_num:
-            if len(actions_block)==0:
-                invalid_map_nums+=0
-            map_nums+=1
-            restart_nums=0
-            env.reset()
-            exploration = LinearSchedule(100000, 0.1)
-            t = 0
-            beta = 0.6
-            
         # 在得到一定的数据之前进行随机游走
         if t < learning_starts:
             action = np.random.choice(actions_block)
@@ -246,19 +246,19 @@ def dqn_learning(
         current_obs = next_state
 
         if (t > learning_starts and t % learning_freq == 0 and replay_buffer_one.can_sample(batch_size)): # 模型训练
-            loss,indexes,e_loss=calculate_loss(replay_buffer_one,
-                                               replay_buffer_n,
-                                               prioritized_buffer,
-                                               n_step,
-                                               batch_size,
-                                               beta,
-                                               gamma,
-                                               Q,
-                                               Q_target,
-                                               double_dqn
-                                               )
+            loss,indexes,e_loss = calculate_loss(replay_buffer_one,
+                                                 replay_buffer_n,
+                                                 prioritized_buffer,
+                                                 n_step,
+                                                 batch_size,
+                                                 beta,
+                                                 gamma,
+                                                 Q,
+                                                 Q_target,
+                                                 double_dqn
+                                                 )
             # 限制误差区间
-            if not e_loss == None:
+            if e_loss is not None:
                 replay_buffer_one.update_priorities(indexes, e_loss)
             clipped_error = -1.0 * loss.clamp(V_MIN, V_MAX)
             optimizer.zero_grad()
@@ -281,7 +281,8 @@ def dqn_learning(
                 add_str += '_dueling'
             if prioritized_buffer:
                 add_str += '_prioritized'
-            model_save_path = f"models/{add_str}_{n_step}_{map_nums}_{t}_{seed}.model"
+            # model_save_path = f"models/{add_str}_{n_step}_{map_nums}_{t}_{seed}.model"
+            model_save_path = f"models/{add_str}_{n_step}_{t}_{seed}.model"
             torch.save(Q.state_dict(), model_save_path)
 
         episode_rewards = env.get_episode_rewards()
@@ -299,9 +300,8 @@ def dqn_learning(
             else:
                 print("mean reward (100 episodes) -")
                 print("best mean reward -")
-            # print(f"episodes {len(episode_rewards)}")
-            print(f"map_nums {map_nums}")
-            print(f"invalid_map_nums {invalid_map_nums}")
+            # print(f"map_nums {map_nums}")
+            # print(f"invalid_map_nums {invalid_map_nums}")
             print(f"restart_nums {restart_nums}")
             print(f"arrive_nums {env.get_arrive_nums()}")
             print(f"exploration {exploration.value(t):.6f}")

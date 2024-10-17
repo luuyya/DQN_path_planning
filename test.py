@@ -32,62 +32,93 @@ def dqn_testing(file_path, env, dueling_dqn, double_dqn, input_channels,nums_act
     else:
         model=DQN(input_channels,nums_actions)
     model_path=get_newest_model(file_path)
+    print(model_path)
     state_dict = torch.load(model_path)
     model.load_state_dict(state_dict)
     model.eval()  # 切换到评估模式
 
     succee_count = 0
 
-    for i in range(test_size):
-        # 获取起点和终点
-        start, end = env.start, env.end
-        current_position = start
+    # for i in range(test_size):
+    #     # 获取起点和终点
+    #     start, end = env.start, env.end
+    #     current_position = start
+    #
+    #     # 保存路径
+    #     path = [current_position]
+    #
+    #     # 模拟模型对路径的预测
+    #     while True:
+    #         if current_position[0] == end[0] and current_position[1]==end[1]:
+    #             succee_count+=1
+    #             break
+    #         # 将当前状态转换为模型输入
+    #         state=np.array(env.get_current_state(),dtype=np.float32)
+    #         state_tensor = torch.from_numpy(state).unsqueeze(0)
+    #
+    #         # 获取动作（模型的输出）
+    #         with torch.no_grad():
+    #             q_values = model(state_tensor)
+    #             # print(q_values)
+    #             action = torch.argmax(q_values).item()
+    #
+    #         # 执行动作并更新当前位置
+    #         # todo:处理一下碰到障碍物的情况
+    #         _, _,done,_ = env.step(action)
+    #         current_position=env.cur
+    #         path.append(current_position)
+    #
+    #         print(current_position)
+    #
+    #         # 检查是否陷入死循环（例如遇到障碍物无法前进）
+    #         if len(path) > env.size*env.size:
+    #             print("The agent seems to be stuck in a loop.")
+    #             break
+    #
+    #     # 绘制地图并显示路径
+    #     # plot_map(env, path)
+    #     print("Path found by the agent:", path)
+    #
+    #     env.reset()
+    #
+    # print(f"successful ratio:{succee_count/test_size}")
 
-        # 保存路径
-        path = [current_position]
+    start, end = env.start, env.end
+    current_position = start
 
-        # 模拟模型对路径的预测
-        while True:
-            if current_position[0] == end[0] and current_position[1]==end[1]:
-                succee_count+=1
-                break
-            # 将当前状态转换为模型输入
-            state=np.array(env.get_current_state(),dtype=np.float32)
-            state_tensor = torch.from_numpy(state).unsqueeze(0)
+    # 保存路径
+    path = [current_position]
 
-            # 获取动作（模型的输出）
-            with torch.no_grad():
-                q_values = model(state_tensor)
-                # print(q_values)
-                action = torch.argmax(q_values).item()
+    # 模拟模型对路径的预测
+    while True:
+        if current_position[0] == end[0] and current_position[1] == end[1]:
+            print("Path found by the agent:", path)
+            break
+        # 将当前状态转换为模型输入
+        state = np.array(env.get_current_state(), dtype=np.float32)
+        state_tensor = torch.from_numpy(state).unsqueeze(0)
 
-            # 执行动作并更新当前位置
-            # todo:处理一下碰到障碍物的情况
-            _, _,done,_ = env.step(action)
-            current_position=env.cur
-            path.append(current_position)
+        # 获取动作（模型的输出）
+        with torch.no_grad():
+            q_values = model(state_tensor)
+            # print(q_values)
+            action = torch.argmax(q_values).item()
 
-            print(current_position)
+        # 执行动作并更新当前位置
+        # todo:处理一下碰到障碍物的情况
+        _, _, done, _ = env.step(action)
+        current_position = env.cur
+        path.append(current_position)
 
-            # 检查是否陷入死循环（例如遇到障碍物无法前进）
-            if len(path) > env.size*env.size:
-                print("The agent seems to be stuck in a loop.")
-                break
+        print(current_position)
 
-        # 绘制地图并显示路径
-        # plot_map(env, path)
-        print("Path found by the agent:", path)
+        # 检查是否陷入死循环（例如遇到障碍物无法前进）
+        if len(path) > env.size * env.size:
+            print("The agent seems to be stuck in a loop.")
+            break
 
-        env.reset()
+    # 绘制地图并显示路径
+    plot_map(env, path)
 
-    print(f"successful ratio:{succee_count/test_size}")
 
-# 示例调用
-if __name__ == "__main__":
-    folder_path="./models"
-
-    env = Map(size=100, obstacle_ratio=0.1, seed=None)
-    env.create_random_map()
-    env.initialize_start_end()
-
-    dqn_testing(folder_path, env, False,False,1,4,100)
+    env.reset()

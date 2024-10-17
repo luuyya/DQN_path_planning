@@ -118,8 +118,8 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert alpha >= 0
 
         super(PrioritizedReplayBuffer, self).__init__(size, obs_dim, n_step, gamma)
-        self.max_priority = 0
-        self.tree_ptr = 1
+        self.max_priority = 1.0
+        self.tree_ptr = 0
         self.alpha = alpha
 
         tree_capacity = 1
@@ -130,8 +130,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         self.min_tree = MinSegmentTree(tree_capacity)
 
     def store_frame(self, cur, a, r, d, next):
-        transition = super().store_frame(cur, a, r, d, next)
-        self.n_step_buffer.append(transition)
+        super().store_frame(cur, a, r, d, next)
 
         self.sum_tree[self.tree_ptr] = self.max_priority ** self.alpha
         self.min_tree[self.tree_ptr] = self.max_priority ** self.alpha

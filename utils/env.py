@@ -102,6 +102,9 @@ class Map:
         reward = 0  # 默认奖励
         done = 0  # 默认未结束
 
+        # 计算当前位置和终点的曼哈顿距离
+        current_distance = abs(self.cur[0] - self.end[0]) + abs(self.cur[1] - self.end[1])
+
         # 检查下一个位置是否在边界内
         if (0 <= next_position[0] < self.size) and (0 <= next_position[1] < self.size):
             # 检查下一个位置是否为障碍物
@@ -110,11 +113,17 @@ class Map:
                 self.cur = next_position
                 self.depth += 1
 
+                # 计算移动后的曼哈顿距离
+                new_distance = abs(self.cur[0] - self.end[0]) + abs(self.cur[1] - self.end[1])
+
                 # 检查是否到达终点
                 if np.array_equal(self.cur, self.end):
                     reward = 100  # 到达终点的奖励
-                    done = 1
+                    done = True
                     self.arrive_nums += 1
+                else:
+                    # 根据曼哈顿距离的变化更新奖励
+                    reward = current_distance - new_distance  # 距离减少获得正奖励，增大则负奖励
             else:
                 reward = -10  # 碰到障碍物的惩罚
                 done = 2
